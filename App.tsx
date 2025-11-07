@@ -86,13 +86,7 @@ function App() {
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
-      
-      let errorMessage = 'Failed to generate image. Please try again.';
-      if (error instanceof Error && error.message.toLowerCase().includes('quota')) {
-        errorMessage = 'API quota exceeded. Please check your plan and billing details.';
-      }
-      
-      showToast(errorMessage, 'error');
+      showToast('Failed to generate image. Please try again.', 'error');
     }
   }, [prompt, settings]);
 
