@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from './ui/Button';
 
@@ -24,9 +23,19 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
           alt="Kreta AI Logo" 
           className="w-16 h-16 mx-auto mb-4" 
         />
-        <h2 className="text-2xl font-bold text-white mb-2">Enter Your Gemini API Key</h2>
-        <p className="text-neutral-400 mb-6 text-sm">
-          To start creating, please provide your API key from Google AI Studio. Make sure billing is enabled for your project.
+        <h2 className="text-2xl font-bold text-white mb-2">Use Sua Própria Chave de API</h2>
+        <p className="text-neutral-400 mb-6 text-sm leading-relaxed">
+          Para usar o poder do modelo Imagen do Google, você precisa de sua própria chave. O Google exige que o faturamento esteja ativado, mas isso <strong>não significa que você será cobrado imediatamente</strong>.
+          Sua conta inclui um <strong>generoso nível de uso gratuito</strong> e novos usuários geralmente recebem <strong>créditos gratuitos</strong> para começar.
+          {' '}
+          <a
+            href="https://cloud.google.com/billing/docs/how-to/enable-billing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sky-400 hover:text-sky-300 underline"
+          >
+            Saiba mais
+          </a>.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -34,11 +43,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Paste your API key here"
+            placeholder="Cole sua chave de API aqui"
             className="w-full bg-[#0a0a0f] border border-[#2d2d3d] rounded-lg text-sm px-4 py-3 mb-4 focus:ring-2 focus:ring-sky-500 text-center text-white"
           />
           <p className="text-xs text-neutral-500 mb-6 px-4">
-            Your key is stored locally in your browser and is never sent to our servers.
+            Sua chave é armazenada localmente em seu navegador e nunca é enviada para nossos servidores.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -47,7 +56,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
               rel="noopener noreferrer"
               className="w-full flex-1 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 text-white bg-[#2d2d3d] hover:bg-[#3f3f4d] px-4 py-2.5"
             >
-              Get API Key
+              Obter Chave de API
             </a>
             <Button
               type="submit"
@@ -55,7 +64,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
               className="w-full flex-1 py-2.5"
               disabled={!apiKey.trim()}
             >
-              Continue
+              Continuar
             </Button>
           </div>
         </form>
