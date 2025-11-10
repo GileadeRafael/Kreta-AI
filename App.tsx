@@ -5,7 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
 import { ApiKeyModal } from './components/ApiKeyModal';
-import { generateImage, generateTitle } from './services/geminiService';
+import { generateImage, generateTitle, generateCanvasTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage, Canvas } from './types';
 
 function App() {
@@ -48,6 +48,7 @@ function App() {
     } else {
       handleCreateNewCanvas(); // Create a new one if nothing is saved
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update active canvas's images whenever generatedImages changes
@@ -94,6 +95,7 @@ function App() {
   const handleCreateNewCanvas = () => {
     const newCanvas: Canvas = {
       id: crypto.randomUUID(),
+      title: 'Untitled Canvas',
       createdAt: new Date().toISOString(),
       images: [],
     };
@@ -169,6 +171,18 @@ function App() {
         });
         return newImages;
       });
+      
+      const currentCanvas = canvases.find(c => c.id === activeCanvasId);
+      if (apiKey && currentCanvas && currentCanvas.title === 'Untitled Canvas') {
+        const newCanvasTitle = await generateCanvasTitle(apiKey, activePrompt);
+        setCanvases(prevCanvases =>
+            prevCanvases.map(canvas =>
+                canvas.id === activeCanvasId
+                    ? { ...canvas, title: newCanvasTitle }
+                    : canvas
+            )
+        );
+      }
 
       setGenerationState('COMPLETE');
       showToast('Images generated successfully!', 'success');
@@ -179,7 +193,7 @@ function App() {
       setGenerationState('ERROR');
       showToast('Failed to generate image. Check your API key or try again.', 'error');
     }
-  }, [prompt, settings, apiKey]);
+  }, [prompt, settings, apiKey, canvases, activeCanvasId]);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">

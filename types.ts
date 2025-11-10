@@ -28,6 +28,7 @@ export interface GeneratedImage {
 
 export interface Canvas {
   id: string;
+  title: string;
   createdAt: string;
   images: GeneratedImage[];
 }

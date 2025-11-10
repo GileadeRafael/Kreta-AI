@@ -40,3 +40,21 @@ export const generateTitle = async (apiKey: string, prompt: string): Promise<str
         return "Untitled Artwork";
     }
 };
+
+export const generateCanvasTitle = async (apiKey: string, prompt: string): Promise<string> => {
+    if (!apiKey) {
+        return "Untitled Canvas";
+    }
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Based on the following prompt, create a single, concise, and thematic title (maximum 4 words) for a collection or canvas of generated images. Do not use quotation marks. Just the title. Prompt: "${prompt}"`,
+        });
+        const title = response.text.trim().replace(/"/g, '');
+        return title || "Creative Canvas";
+    } catch (error) {
+        console.error("Canvas title generation failed:", error);
+        return "Creative Canvas";
+    }
+};
