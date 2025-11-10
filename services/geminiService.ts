@@ -1,10 +1,8 @@
+
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
 export const generateImage = async (apiKey: string, prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
-    if (!apiKey) {
-        throw new Error("API Key is missing.");
-    }
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateImages({
@@ -25,9 +23,6 @@ export const generateImage = async (apiKey: string, prompt: string, aspectRatio:
 };
 
 export const generateTitle = async (apiKey: string, prompt: string): Promise<string> => {
-    if (!apiKey) {
-        return "Untitled Artwork";
-    }
     try {
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
@@ -42,9 +37,6 @@ export const generateTitle = async (apiKey: string, prompt: string): Promise<str
 };
 
 export const generateCanvasTitle = async (apiKey: string, prompt: string): Promise<string> => {
-    if (!apiKey) {
-        return "Untitled Canvas";
-    }
     try {
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({

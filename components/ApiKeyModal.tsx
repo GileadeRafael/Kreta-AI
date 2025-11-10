@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from './ui/Button';
 
@@ -10,7 +11,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(apiKey);
+    if (apiKey.trim()) {
+        onSubmit(apiKey);
+    }
   };
 
   return (
@@ -32,7 +35,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Paste your API key here"
-            className="w-full bg-[#0a0a0f] border border-[#2d2d3d] rounded-lg text-sm px-4 py-3 mb-4 focus:ring-2 focus:ring-sky-500 text-center"
+            className="w-full bg-[#0a0a0f] border border-[#2d2d3d] rounded-lg text-sm px-4 py-3 mb-4 focus:ring-2 focus:ring-sky-500 text-center text-white"
           />
           <p className="text-xs text-neutral-500 mb-6 px-4">
             Your key is stored locally in your browser and is never sent to our servers.
@@ -44,7 +47,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
               rel="noopener noreferrer"
               className="w-full flex-1 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 text-white bg-[#2d2d3d] hover:bg-[#3f3f4d] px-4 py-2.5"
             >
-              How to find my API Key?
+              Get API Key
             </a>
             <Button
               type="submit"

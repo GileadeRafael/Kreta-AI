@@ -4,13 +4,13 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
-import { ApiKeyModal } from './components/ApiKeyModal';
 import { generateImage, generateTitle, generateCanvasTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage, Canvas } from './types';
+import { ApiKeyModal } from './components/ApiKeyModal';
 
 function App() {
-  const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini-api-key'));
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(!localStorage.getItem('gemini-api-key'));
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   
   const [canvases, setCanvases] = useState<Canvas[]>([]);
   const [activeCanvasId, setActiveCanvasId] = useState<string | null>(null);
@@ -31,6 +31,15 @@ function App() {
 
   const imageSpawnCounter = useRef(0);
 
+  useEffect(() => {
+    const savedKey = localStorage.getItem('gemini-api-key');
+    if (savedKey) {
+      setApiKey(savedKey);
+    } else {
+      setIsApiKeyModalOpen(true);
+    }
+  }, []);
+  
   // Load canvases from localStorage on initial render
   useEffect(() => {
     const savedCanvases = localStorage.getItem('kreta-canvases');
@@ -73,18 +82,12 @@ function App() {
       localStorage.setItem('kreta-canvases', JSON.stringify(canvases));
     }
   }, [canvases]);
-
-
-  const handleApiKeySubmit = (key: string) => {
-    const trimmedKey = key.trim();
-    if (trimmedKey) {
-      setApiKey(trimmedKey);
-      localStorage.setItem('gemini-api-key', trimmedKey);
-      setIsApiKeyModalOpen(false);
-      showToast('API Key saved successfully!', 'success');
-    } else {
-      showToast('Please enter a valid API Key.', 'error');
-    }
+  
+  const handleApiKeySubmit = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    localStorage.setItem('gemini-api-key', newApiKey);
+    setIsApiKeyModalOpen(false);
+    showToast('API Key saved successfully!', 'success');
   };
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -117,7 +120,7 @@ function App() {
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     if (!apiKey) {
-      showToast('API Key is not set. Please set it to generate images.', 'error');
+      showToast('Please set your Gemini API key first.', 'error');
       setIsApiKeyModalOpen(true);
       return;
     }
@@ -173,7 +176,7 @@ function App() {
       });
       
       const currentCanvas = canvases.find(c => c.id === activeCanvasId);
-      if (apiKey && currentCanvas && currentCanvas.title === 'Untitled Canvas') {
+      if (currentCanvas && currentCanvas.title === 'Untitled Canvas') {
         const newCanvasTitle = await generateCanvasTitle(apiKey, activePrompt);
         setCanvases(prevCanvases =>
             prevCanvases.map(canvas =>
@@ -193,13 +196,12 @@ function App() {
       setGenerationState('ERROR');
       showToast('Failed to generate image. Check your API key or try again.', 'error');
     }
-  }, [prompt, settings, apiKey, canvases, activeCanvasId]);
+  }, [prompt, settings, canvases, activeCanvasId, apiKey]);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       {isApiKeyModalOpen && <ApiKeyModal onSubmit={handleApiKeySubmit} />}
-
-      <Header onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)} hasApiKey={!!apiKey} />
+      <Header onSetApiKeyClick={() => setIsApiKeyModalOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto">
