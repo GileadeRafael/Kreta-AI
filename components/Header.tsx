@@ -1,6 +1,13 @@
-import React from 'react';
 
-export const Header: React.FC = () => {
+import React from 'react';
+import { Button } from './ui/Button';
+
+interface HeaderProps {
+  onOpenApiKeyModal: () => void;
+  hasApiKey: boolean;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onOpenApiKeyModal, hasApiKey }) => {
   return (
     <header className="flex-shrink-0 z-50 w-full bg-[#1c1c1c] border-b border-[#2d2d3d]">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,6 +21,14 @@ export const Header: React.FC = () => {
             <span className="font-medium text-white">Kreta AI</span>
             <span className="text-xs text-neutral-400 bg-[#2d2d3d] px-2 py-1 rounded-md">v. 1.0</span>
           </div>
+          {hasApiKey && (
+            <div className="flex items-center space-x-3">
+              <span className="text-xs text-neutral-400 hidden sm:inline">Excedeu a quota?</span>
+              <Button variant="secondary" onClick={onOpenApiKeyModal} className="py-1.5 px-3 text-xs">
+                Trocar chave API
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

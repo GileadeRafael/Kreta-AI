@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Generator } from './components/Generator';
@@ -9,8 +9,8 @@ import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 
 function App() {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini-api-key'));
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(!localStorage.getItem('gemini-api-key'));
   const [prompt, setPrompt] = useState<string>('');
   const [settings, setSettings] = useState<Settings>({
     style: 'Cinematic',
@@ -26,19 +26,11 @@ function App() {
 
   const imageSpawnCounter = useRef(0);
 
-  useEffect(() => {
-    const storedApiKey = localStorage.getItem('gemini-api-key');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    } else {
-      setIsApiKeyModalOpen(true);
-    }
-  }, []);
-
   const handleApiKeySubmit = (key: string) => {
-    if (key.trim()) {
-      setApiKey(key);
-      localStorage.setItem('gemini-api-key', key);
+    const trimmedKey = key.trim();
+    if (trimmedKey) {
+      setApiKey(trimmedKey);
+      localStorage.setItem('gemini-api-key', trimmedKey);
       setIsApiKeyModalOpen(false);
       showToast('API Key saved successfully!', 'success');
     } else {
@@ -123,7 +115,7 @@ function App() {
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       {isApiKeyModalOpen && <ApiKeyModal onSubmit={handleApiKeySubmit} />}
 
-      <Header />
+      <Header onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)} hasApiKey={!!apiKey} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto">
