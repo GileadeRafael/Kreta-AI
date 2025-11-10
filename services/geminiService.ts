@@ -1,33 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
-export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
-    if (typeof process === 'undefined' || !process.env.API_KEY) {
-        console.warn("API_KEY environment variable not set. Using placeholder images.");
-        return new Promise(resolve => {
-            setTimeout(async () => {
-                const aspectParts = aspectRatio.split(':').map(Number);
-                const baseWidth = 512;
-                const width = Math.round(baseWidth * (aspectParts[0] / aspectParts[1]));
-                const height = baseWidth;
-                
-                const imagesPromises = Array.from({ length: numImages }, (_, i) => 
-                    fetch(`https://picsum.photos/seed/gemini${Date.now() + i}/${width}/${height}`)
-                        .then(res => res.blob())
-                        .then(blob => new Promise<string>(res => {
-                            const reader = new FileReader();
-                            reader.onload = () => res((reader.result as string).split(',')[1]);
-                            reader.readAsDataURL(blob);
-                        }))
-                );
-                
-                const images = await Promise.all(imagesPromises);
-                resolve(images);
-            }, 2500);
-        });
+export const generateImage = async (apiKey: string, prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
+    if (!apiKey) {
+        throw new Error("API Key is missing.");
     }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
@@ -46,12 +24,12 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
     }
 };
 
-export const generateTitle = async (prompt: string): Promise<string> => {
-    if (typeof process === 'undefined' || !process.env.API_KEY) {
-        return "Generated Image";
+export const generateTitle = async (apiKey: string, prompt: string): Promise<string> => {
+    if (!apiKey) {
+        return "Untitled Artwork";
     }
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Create a single, concise, and artistic title (maximum 4 words) for an image generated from the following prompt. Do not provide suggestions, alternatives, or quotation marks. Just the title. Prompt: "${prompt}"`,
