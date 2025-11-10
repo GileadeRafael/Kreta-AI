@@ -1,16 +1,21 @@
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { generateImage, generateTitle } from './services/geminiService';
-import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
+import type { Settings, GenerationState, ToastInfo, GeneratedImage, Canvas } from './types';
 
 function App() {
   const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini-api-key'));
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(!localStorage.getItem('gemini-api-key'));
+  
+  const [canvases, setCanvases] = useState<Canvas[]>([]);
+  const [activeCanvasId, setActiveCanvasId] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+
   const [prompt, setPrompt] = useState<string>('');
   const [settings, setSettings] = useState<Settings>({
     style: 'Cinematic',
@@ -20,11 +25,54 @@ function App() {
     numImages: 1,
     quality: 'HD',
   });
-  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+  
   const [generationState, setGenerationState] = useState<GenerationState>('IDLE');
   const [toast, setToast] = useState<ToastInfo | null>(null);
 
   const imageSpawnCounter = useRef(0);
+
+  // Load canvases from localStorage on initial render
+  useEffect(() => {
+    const savedCanvases = localStorage.getItem('kreta-canvases');
+    if (savedCanvases) {
+      const parsedCanvases: Canvas[] = JSON.parse(savedCanvases);
+      if (parsedCanvases.length > 0) {
+        setCanvases(parsedCanvases);
+        // Set the most recent canvas as active
+        const latestCanvas = parsedCanvases.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+        setActiveCanvasId(latestCanvas.id);
+        setGeneratedImages(latestCanvas.images);
+      } else {
+        handleCreateNewCanvas(); // Create a new one if saved is empty
+      }
+    } else {
+      handleCreateNewCanvas(); // Create a new one if nothing is saved
+    }
+  }, []);
+
+  // Update active canvas's images whenever generatedImages changes
+  useEffect(() => {
+    if (activeCanvasId) {
+      setCanvases(prevCanvases => {
+        const newCanvases = prevCanvases.map(canvas =>
+          canvas.id === activeCanvasId ? { ...canvas, images: generatedImages } : canvas
+        );
+        // Check if the update is necessary to prevent infinite loops
+        if (JSON.stringify(newCanvases) !== JSON.stringify(prevCanvases)) {
+          return newCanvases;
+        }
+        return prevCanvases;
+      });
+    }
+  }, [generatedImages, activeCanvasId]);
+
+  // Save canvases to localStorage whenever the canvases state changes
+  useEffect(() => {
+    if (canvases.length > 0) {
+      localStorage.setItem('kreta-canvases', JSON.stringify(canvases));
+    }
+  }, [canvases]);
+
 
   const handleApiKeySubmit = (key: string) => {
     const trimmedKey = key.trim();
@@ -42,6 +90,28 @@ function App() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+  
+  const handleCreateNewCanvas = () => {
+    const newCanvas: Canvas = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      images: [],
+    };
+    setCanvases(prev => [newCanvas, ...prev]);
+    setActiveCanvasId(newCanvas.id);
+    setGeneratedImages([]);
+    imageSpawnCounter.current = 0;
+  };
+
+  const handleSwitchCanvas = (canvasId: string) => {
+    const canvas = canvases.find(c => c.id === canvasId);
+    if (canvas) {
+      setActiveCanvasId(canvas.id);
+      setGeneratedImages(canvas.images);
+      imageSpawnCounter.current = canvas.images.length;
+    }
+  };
+
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     if (!apiKey) {
@@ -128,6 +198,10 @@ function App() {
             handleGenerate={handleGenerate}
             generatedImages={generatedImages}
             setGeneratedImages={setGeneratedImages}
+            canvases={canvases}
+            activeCanvasId={activeCanvasId}
+            handleCreateNewCanvas={handleCreateNewCanvas}
+            handleSwitchCanvas={handleSwitchCanvas}
           />
         </main>
       </div>

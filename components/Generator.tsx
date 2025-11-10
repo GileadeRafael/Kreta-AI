@@ -2,7 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Controls } from './Controls';
 import { Preview } from './Preview';
-import type { Settings, GenerationState, GeneratedImage } from '../types';
+import type { Settings, GenerationState, GeneratedImage, Canvas } from '../types';
 import { BottomToolbar } from './BottomToolbar';
 import { ImageModal } from './ImageModal';
 
@@ -15,6 +15,10 @@ interface GeneratorProps {
   handleGenerate: (promptOverride?: string) => void;
   generatedImages: GeneratedImage[];
   setGeneratedImages: React.Dispatch<React.SetStateAction<GeneratedImage[]>>;
+  canvases: Canvas[];
+  activeCanvasId: string | null;
+  handleCreateNewCanvas: () => void;
+  handleSwitchCanvas: (id: string) => void;
 }
 
 export const Generator: React.FC<GeneratorProps> = ({
@@ -26,6 +30,10 @@ export const Generator: React.FC<GeneratorProps> = ({
   handleGenerate,
   generatedImages,
   setGeneratedImages,
+  canvases,
+  activeCanvasId,
+  handleCreateNewCanvas,
+  handleSwitchCanvas,
 }) => {
   const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
   const [scale, setScale] = useState(1);
@@ -116,7 +124,12 @@ export const Generator: React.FC<GeneratorProps> = ({
   return (
     <div className="w-full h-full p-0 lg:p-0 relative flex" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       <div className="w-[320px] flex-shrink-0 sticky top-0 p-6 lg:p-8 self-start z-10">
-        <Controls settings={settings} setSettings={setSettings} />
+        <Controls 
+          canvases={canvases}
+          activeCanvasId={activeCanvasId}
+          onCreateNewCanvas={handleCreateNewCanvas}
+          onSwitchCanvas={handleSwitchCanvas}
+        />
       </div>
       
       <div 
