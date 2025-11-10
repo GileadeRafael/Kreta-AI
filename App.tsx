@@ -38,7 +38,7 @@ function App() {
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 5000);
   };
   
   const handleClearCanvas = () => {
@@ -125,12 +125,20 @@ function App() {
       setGenerationState('ERROR');
       
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('API key not valid')) {
-        showToast('Your API key is invalid. Please check and enter it again.', 'error');
+      let displayMessage = 'Failed to generate image. Please check your prompt or try again later.';
+
+      if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not valid')) {
+        displayMessage = 'Your API key is invalid. Please enter a valid one.';
         handleChangeApiKey();
-      } else {
-        showToast('Failed to generate image. Please check your prompt or try again later.', 'error');
+      } else if (errorMessage.includes('PERMISSION_DENIED')) {
+        displayMessage = 'Permission Denied. Make sure the API is enabled in your Google Cloud project.';
+      } else if (errorMessage.toLowerCase().includes('billing')) {
+        displayMessage = 'A billing issue occurred. Please check your Google Cloud project settings.';
+      } else if (errorMessage.includes('SAFETY')) {
+        displayMessage = 'The prompt was blocked due to safety settings. Please modify your prompt.';
       }
+      
+      showToast(displayMessage, 'error');
     }
   }, [prompt, settings, apiKey]);
 

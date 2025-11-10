@@ -26,7 +26,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
         />
         <h2 className="text-2xl font-bold text-white mb-2">Enter Your Gemini API Key</h2>
         <p className="text-neutral-400 mb-6 text-sm">
-          To start creating, please provide your own Google AI Studio API key.
+          To start creating, please provide your API key from Google AI Studio. Make sure billing is enabled for your project.
         </p>
 
         <form onSubmit={handleSubmit}>
