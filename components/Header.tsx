@@ -2,14 +2,12 @@
 import React from 'react';
 import { Button } from './ui/Button';
 import { TrashIcon } from './icons/TrashIcon';
-import { KeyIcon } from './icons/KeyIcon';
 
 interface HeaderProps {
     onClearCanvas: () => void;
-    onShowApiKeyModal: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onClearCanvas, onShowApiKeyModal }) => {
+export const Header: React.FC<HeaderProps> = ({ onClearCanvas }) => {
   return (
     <header className="flex-shrink-0 z-50 w-full bg-[#1c1c1c] border-b border-[#2d2d3d]">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,10 +25,6 @@ export const Header: React.FC<HeaderProps> = ({ onClearCanvas, onShowApiKeyModal
             <Button variant="ghost" onClick={onClearCanvas} className="py-1.5 px-3 text-xs">
                 <TrashIcon className="w-4 h-4 mr-1.5"/>
                 Clear Canvas
-            </Button>
-            <Button variant="ghost" onClick={onShowApiKeyModal} className="py-1.5 px-3 text-xs">
-                <KeyIcon className="w-4 h-4 mr-1.5"/>
-                Change API Key
             </Button>
           </div>
         </div>
