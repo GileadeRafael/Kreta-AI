@@ -2,9 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
+export const generateImage = async (apiKey: string, prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
@@ -22,7 +21,8 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
     }
 };
 
-export const generateTitle = async (prompt: string): Promise<string> => {
+export const generateTitle = async (apiKey: string, prompt: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey });
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',

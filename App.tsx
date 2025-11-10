@@ -1,10 +1,11 @@
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
 import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
+import { ApiKeyModal } from './components/ApiKeyModal';
 
 function App() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
@@ -21,6 +22,17 @@ function App() {
   
   const [generationState, setGenerationState] = useState<GenerationState>('IDLE');
   const [toast, setToast] = useState<ToastInfo | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('gemini-api-key');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    } else {
+      setIsApiKeyModalOpen(true);
+    }
+  }, []);
 
   const imageSpawnCounter = useRef(0);
 
@@ -35,8 +47,26 @@ function App() {
     showToast('Canvas cleared.', 'success');
   }
 
+  const handleApiKeySubmit = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    localStorage.setItem('gemini-api-key', newApiKey);
+    setIsApiKeyModalOpen(false);
+    showToast('API Key saved successfully!', 'success');
+  };
+
+  const handleChangeApiKey = () => {
+    setApiKey(null);
+    localStorage.removeItem('gemini-api-key');
+    setIsApiKeyModalOpen(true);
+  };
+
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
+    if (!apiKey) {
+      showToast('Please set your API Key before generating.', 'error');
+      setIsApiKeyModalOpen(true);
+      return;
+    }
     if (!activePrompt.trim()) {
       showToast('Please enter a prompt to generate an image.', 'error');
       return;
@@ -63,11 +93,11 @@ function App() {
     setGeneratedImages(prev => [...prev, ...placeholders]);
 
     try {
-      const images = await generateImage(activePrompt, settings.aspectRatio, settings.numImages);
+      const images = await generateImage(apiKey, activePrompt, settings.aspectRatio, settings.numImages);
       
       let title = "Generated Image";
       if (images.length > 0) {
-        title = await generateTitle(activePrompt);
+        title = await generateTitle(apiKey, activePrompt);
       }
       
       setGeneratedImages(prevImages => {
@@ -93,13 +123,21 @@ function App() {
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
-      showToast('Failed to generate image. Please check your prompt or try again later.', 'error');
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('API key not valid')) {
+        showToast('Your API key is invalid. Please check and enter it again.', 'error');
+        handleChangeApiKey();
+      } else {
+        showToast('Failed to generate image. Please check your prompt or try again later.', 'error');
+      }
     }
-  }, [prompt, settings]);
+  }, [prompt, settings, apiKey]);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
-      <Header onClearCanvas={handleClearCanvas} />
+      {isApiKeyModalOpen && <ApiKeyModal onSubmit={handleApiKeySubmit} />}
+      <Header onClearCanvas={handleClearCanvas} onChangeApiKey={handleChangeApiKey} />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-auto">
           <Generator
