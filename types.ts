@@ -25,10 +25,3 @@ export interface GeneratedImage {
   y: number;
   status?: 'loading' | 'complete';
 }
-
-export interface Canvas {
-  id: string;
-  title: string;
-  createdAt: string;
-  images: GeneratedImage[];
-}

@@ -4,7 +4,6 @@ import type { Settings } from '../types';
 
 export const generateImage = async (apiKey: string, prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
     const ai = new GoogleGenAI({ apiKey });
-
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
@@ -23,8 +22,8 @@ export const generateImage = async (apiKey: string, prompt: string, aspectRatio:
 };
 
 export const generateTitle = async (apiKey: string, prompt: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey });
     try {
-        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Create a single, concise, and artistic title (maximum 4 words) for an image generated from the following prompt. Do not provide suggestions, alternatives, or quotation marks. Just the title. Prompt: "${prompt}"`,
@@ -33,20 +32,5 @@ export const generateTitle = async (apiKey: string, prompt: string): Promise<str
     } catch (error) {
         console.error("Title generation failed:", error);
         return "Untitled Artwork";
-    }
-};
-
-export const generateCanvasTitle = async (apiKey: string, prompt: string): Promise<string> => {
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Based on the following prompt, create a single, concise, and thematic title (maximum 4 words) for a collection or canvas of generated images. Do not use quotation marks. Just the title. Prompt: "${prompt}"`,
-        });
-        const title = response.text.trim().replace(/"/g, '');
-        return title || "Creative Canvas";
-    } catch (error) {
-        console.error("Canvas title generation failed:", error);
-        return "Creative Canvas";
     }
 };

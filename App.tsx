@@ -1,19 +1,16 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
-import { generateImage, generateTitle, generateCanvasTitle } from './services/geminiService';
-import type { Settings, GenerationState, ToastInfo, GeneratedImage, Canvas } from './types';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { generateImage, generateTitle } from './services/geminiService';
+import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 
 function App() {
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   
-  const [canvases, setCanvases] = useState<Canvas[]>([]);
-  const [activeCanvasId, setActiveCanvasId] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
 
   const [prompt, setPrompt] = useState<string>('');
@@ -32,61 +29,18 @@ function App() {
   const imageSpawnCounter = useRef(0);
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('gemini-api-key');
+    const savedKey = localStorage.getItem('geminiApiKey');
     if (savedKey) {
       setApiKey(savedKey);
     } else {
-      setIsApiKeyModalOpen(true);
+      setShowApiKeyModal(true);
     }
   }, []);
-  
-  // Load canvases from localStorage on initial render
-  useEffect(() => {
-    const savedCanvases = localStorage.getItem('kreta-canvases');
-    if (savedCanvases) {
-      const parsedCanvases: Canvas[] = JSON.parse(savedCanvases);
-      if (parsedCanvases.length > 0) {
-        setCanvases(parsedCanvases);
-        // Set the most recent canvas as active
-        const latestCanvas = parsedCanvases.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-        setActiveCanvasId(latestCanvas.id);
-        setGeneratedImages(latestCanvas.images);
-      } else {
-        handleCreateNewCanvas(); // Create a new one if saved is empty
-      }
-    } else {
-      handleCreateNewCanvas(); // Create a new one if nothing is saved
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Update active canvas's images whenever generatedImages changes
-  useEffect(() => {
-    if (activeCanvasId) {
-      setCanvases(prevCanvases => {
-        const newCanvases = prevCanvases.map(canvas =>
-          canvas.id === activeCanvasId ? { ...canvas, images: generatedImages } : canvas
-        );
-        // Check if the update is necessary to prevent infinite loops
-        if (JSON.stringify(newCanvases) !== JSON.stringify(prevCanvases)) {
-          return newCanvases;
-        }
-        return prevCanvases;
-      });
-    }
-  }, [generatedImages, activeCanvasId]);
-
-  // Save canvases to localStorage whenever the canvases state changes
-  useEffect(() => {
-    if (canvases.length > 0) {
-      localStorage.setItem('kreta-canvases', JSON.stringify(canvases));
-    }
-  }, [canvases]);
-  
   const handleApiKeySubmit = (newApiKey: string) => {
     setApiKey(newApiKey);
-    localStorage.setItem('gemini-api-key', newApiKey);
-    setIsApiKeyModalOpen(false);
+    localStorage.setItem('geminiApiKey', newApiKey);
+    setShowApiKeyModal(false);
     showToast('API Key saved successfully!', 'success');
   };
 
@@ -95,36 +49,19 @@ function App() {
     setTimeout(() => setToast(null), 4000);
   };
   
-  const handleCreateNewCanvas = () => {
-    const newCanvas: Canvas = {
-      id: crypto.randomUUID(),
-      title: 'Untitled Canvas',
-      createdAt: new Date().toISOString(),
-      images: [],
-    };
-    setCanvases(prev => [newCanvas, ...prev]);
-    setActiveCanvasId(newCanvas.id);
+  const handleClearCanvas = () => {
     setGeneratedImages([]);
     imageSpawnCounter.current = 0;
-  };
-
-  const handleSwitchCanvas = (canvasId: string) => {
-    const canvas = canvases.find(c => c.id === canvasId);
-    if (canvas) {
-      setActiveCanvasId(canvas.id);
-      setGeneratedImages(canvas.images);
-      imageSpawnCounter.current = canvas.images.length;
-    }
-  };
-
+    showToast('Canvas cleared.', 'success');
+  }
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     if (!apiKey) {
-      showToast('Please set your Gemini API key first.', 'error');
-      setIsApiKeyModalOpen(true);
+      showToast('Please set your API key first.', 'error');
+      setShowApiKeyModal(true);
       return;
     }
-
+    
     const activePrompt = promptOverride || prompt;
     if (!activePrompt.trim()) {
       showToast('Please enter a prompt to generate an image.', 'error');
@@ -174,18 +111,6 @@ function App() {
         });
         return newImages;
       });
-      
-      const currentCanvas = canvases.find(c => c.id === activeCanvasId);
-      if (currentCanvas && currentCanvas.title === 'Untitled Canvas') {
-        const newCanvasTitle = await generateCanvasTitle(apiKey, activePrompt);
-        setCanvases(prevCanvases =>
-            prevCanvases.map(canvas =>
-                canvas.id === activeCanvasId
-                    ? { ...canvas, title: newCanvasTitle }
-                    : canvas
-            )
-        );
-      }
 
       setGenerationState('COMPLETE');
       showToast('Images generated successfully!', 'success');
@@ -194,16 +119,15 @@ function App() {
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
-      showToast('Failed to generate image. Check your API key or try again.', 'error');
+      showToast('Failed to generate image. Please check your API key or prompt.', 'error');
     }
-  }, [prompt, settings, canvases, activeCanvasId, apiKey]);
+  }, [apiKey, prompt, settings]);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
-      {isApiKeyModalOpen && <ApiKeyModal onSubmit={handleApiKeySubmit} />}
-      <Header onSetApiKeyClick={() => setIsApiKeyModalOpen(true)} />
+      {showApiKeyModal && <ApiKeyModal onSubmit={handleApiKeySubmit} />}
+      <Header onClearCanvas={handleClearCanvas} onShowApiKeyModal={() => setShowApiKeyModal(true)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
         <main className="flex-1 overflow-auto">
           <Generator
             prompt={prompt}
@@ -214,10 +138,6 @@ function App() {
             handleGenerate={handleGenerate}
             generatedImages={generatedImages}
             setGeneratedImages={setGeneratedImages}
-            canvases={canvases}
-            activeCanvasId={activeCanvasId}
-            handleCreateNewCanvas={handleCreateNewCanvas}
-            handleSwitchCanvas={handleSwitchCanvas}
           />
         </main>
       </div>
