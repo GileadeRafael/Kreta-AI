@@ -129,13 +129,21 @@ function App() {
         const newImages = [...prevImages];
         placeholders.forEach((placeholder, index) => {
           const imageIndex = newImages.findIndex(img => img.id === placeholder.id);
-          if (imageIndex !== -1 && images[index]) {
-            newImages[imageIndex] = {
-              ...newImages[imageIndex],
-              src: `data:image/png;base64,${images[index]}`,
-              title: title,
-              status: 'complete' as const,
-            };
+          
+          // Match available images to placeholders. If we generated fewer images than requested (due to error),
+          // we still fill what we have.
+          if (imageIndex !== -1) {
+            if (images[index]) {
+                newImages[imageIndex] = {
+                ...newImages[imageIndex],
+                src: `data:image/png;base64,${images[index]}`,
+                title: title,
+                status: 'complete' as const,
+                };
+            } else {
+                // Remove placeholders that didn't get an image
+                newImages.splice(imageIndex, 1);
+            }
           }
         });
         return newImages;
@@ -146,6 +154,7 @@ function App() {
     } catch (error) {
       console.error('Image generation failed:', error);
       
+      // Remove loading placeholders on error
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
@@ -162,7 +171,7 @@ function App() {
         displayMessage = 'Invalid API Key. Please check settings.';
         setShowApiKeyModal(true);
       } else if (errorMessage.includes('429') || errorMessage.includes('Quota')) {
-        displayMessage = 'API Quota Exceeded. Try again later.';
+        displayMessage = 'Traffic Limit Exceeded. Generating too fast for this key.';
       } else {
         displayMessage = errorMessage;
       }
