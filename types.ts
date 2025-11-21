@@ -24,5 +24,4 @@ export interface GeneratedImage {
   x: number;
   y: number;
   status?: 'loading' | 'complete';
-  credits?: number;
 }

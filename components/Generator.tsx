@@ -4,8 +4,6 @@ import { Preview } from './Preview';
 import type { Settings, GenerationState, GeneratedImage } from '../types';
 import { BottomToolbar } from './BottomToolbar';
 import { ImageModal } from './ImageModal';
-import { CreditPill } from './CreditPill';
-import { CreditsModal } from './CreditsModal';
 
 interface GeneratorProps {
   prompt: string;
@@ -16,7 +14,6 @@ interface GeneratorProps {
   handleGenerate: (promptOverride?: string) => void;
   generatedImages: GeneratedImage[];
   setGeneratedImages: React.Dispatch<React.SetStateAction<GeneratedImage[]>>;
-  credits: number | null;
 }
 
 export const Generator: React.FC<GeneratorProps> = ({
@@ -28,12 +25,10 @@ export const Generator: React.FC<GeneratorProps> = ({
   handleGenerate,
   generatedImages,
   setGeneratedImages,
-  credits,
 }) => {
   const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
   const [scale, setScale] = useState(1);
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
-  const [isCreditsModalOpen, setCreditsModalOpen] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const isPanning = useRef(false);
@@ -148,11 +143,6 @@ export const Generator: React.FC<GeneratorProps> = ({
         handleGenerate={handleGenerate}
       />
 
-      <CreditPill 
-        credits={credits}
-        onClick={() => setCreditsModalOpen(true)}
-      />
-
       {zoomedImage && (
         <ImageModal
           image={zoomedImage}
@@ -160,11 +150,6 @@ export const Generator: React.FC<GeneratorProps> = ({
         />
       )}
 
-      {isCreditsModalOpen && (
-        <CreditsModal 
-          onClose={() => setCreditsModalOpen(false)}
-        />
-      )}
     </div>
   );
 };
