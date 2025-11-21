@@ -170,8 +170,8 @@ function App() {
       } else if (errorMessage.includes('403') || errorMessage.includes('401') || errorMessage.includes('API key')) {
         displayMessage = 'Invalid API Key. Please check settings.';
         setShowApiKeyModal(true);
-      } else if (errorMessage.includes('429') || errorMessage.includes('Quota')) {
-        displayMessage = 'Traffic Limit Exceeded. Generating too fast for this key.';
+      } else if (errorMessage.includes('429') || errorMessage.includes('Quota') || errorMessage.includes('Limit')) {
+        displayMessage = 'Traffic Limit Exceeded. Please wait 1 minute and try again.';
       } else {
         displayMessage = errorMessage;
       }
