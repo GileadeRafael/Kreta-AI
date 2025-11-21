@@ -1,10 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { Settings, GenerationState } from '../types';
 import { Button } from './ui/Button';
 import { GearIcon } from './icons/GearIcon';
 import { ImagePlusIcon } from './icons/ImagePlusIcon';
 import { XIcon } from './icons/XIcon';
-import { MagicWandIcon } from './icons/MagicWandIcon';
+import { ArrowUpIcon } from './icons/ArrowUpIcon';
 
 interface BottomToolbarProps {
     prompt: string;
@@ -194,7 +195,7 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
                                 ) : (
                                     <>
                                         <span className="hidden sm:inline">Generate</span>
-                                        <MagicWandIcon className="w-5 h-5"/>
+                                        <ArrowUpIcon className="w-5 h-5"/>
                                     </>
                                 )}
                             </Button>
