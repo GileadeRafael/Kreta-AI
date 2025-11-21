@@ -32,7 +32,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
 
     return (
         <div 
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-fast"
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-fast"
             onClick={onClose}
         >
              <button 
@@ -69,7 +69,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                     <div className="pt-6 flex-shrink-0">
                         <button 
                             onClick={handleDownload} 
-                            className="w-full group inline-flex items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-neutral-900/50 text-white bg-gradient-to-r from-sky-500 to-cyan-400 hover:from-sky-500 hover:to-cyan-300 focus:ring-sky-500/50 px-4 py-3 transform hover:scale-105"
+                            className="w-full group inline-flex items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-neutral-900/50 text-white bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 focus:ring-violet-500/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] px-4 py-3 transform hover:scale-105"
                         >
                             <DownloadIcon className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
                             <span>Download Image</span>

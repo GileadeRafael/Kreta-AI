@@ -6,29 +6,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kreta AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#8b5cf6', // Violet
+              secondary: '#f97316', // Orange
+              dark: '#0f0715', // Deep Purple/Black
+              surface: '#1c1026', // Lighter Purple/Black
+            },
+            animation: {
+              'gradient-x': 'gradient-x 3s ease infinite',
+            },
+            keyframes: {
+              'gradient-x': {
+                '0%, 100%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'left center'
+                },
+                '50%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'right center'
+                },
+              },
+            },
+          }
+        }
+      }
+    </script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
       body {
         font-family: "Bricolage Grotesque", sans-serif;
-        background-color: #0a0a0f;
-        background-image: radial-gradient(#2d2d3d 1px, transparent 0);
-        background-size: 20px 20px;
+        background-color: #0f0715;
+        /* Neutral dark grey dots for "dotted black" effect */
+        background-image: radial-gradient(#3f3f46 1px, transparent 0);
+        background-size: 24px 24px;
         color: #e5e7eb;
+        overflow: hidden; /* Prevent body scroll, handle in App */
       }
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: #1a1a24;
+        background: #1c1026;
       }
       ::-webkit-scrollbar-thumb {
-        background: #2d2d3d;
-        border-radius: 4px;
+        background: #4c1d95;
+        border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #3f3f4d;
+        background: #6d28d9;
       }
+      
+      .glass-panel {
+        background: rgba(28, 16, 38, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
       @keyframes fade-in-blur {
         from { filter: blur(16px); opacity: 0; }
         to { filter: blur(0px); opacity: 1; }
@@ -36,6 +75,7 @@
       .animate-fade-in-blur {
         animation: fade-in-blur 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       }
+      
       @keyframes loading-gradient {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -44,22 +84,10 @@
       .loading-placeholder {
         width: 100%;
         height: 100%;
-        background: linear-gradient(-45deg, #4f46e5, #e11d48, #23a6d5, #f59e0b);
+        background: linear-gradient(-45deg, #7c3aed, #ec4899, #f97316);
         background-size: 400% 400%;
-        animation: loading-gradient 10s ease infinite;
-        filter: blur(32px);
-        transform: scale(1.2);
+        animation: loading-gradient 3s ease infinite;
       }
-       @keyframes modal-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-      }
-      @keyframes modal-scale-in {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-      }
-      .animate-modal-fade-in { animation: modal-fade-in 0.3s ease-out forwards; }
-      .animate-modal-scale-in { animation: modal-scale-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
     </style>
   <script type="importmap">
 {
@@ -72,8 +100,8 @@
 }
 </script>
 </head>
-  <body class="bg-[#0a0a0f]">
-    <div id="root"></div>
+  <body class="bg-[#0f0715] text-white h-screen w-screen">
+    <div id="root" class="h-full w-full"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

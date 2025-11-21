@@ -1,20 +1,13 @@
-
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
 import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
-import { CreditPill } from './components/CreditPill';
-import { CreditsModal } from './components/CreditsModal';
-
-const INITIAL_FREE_CREDITS = 10;
 
 function App() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [isCreditsModalOpen, setCreditsModalOpen] = useState(false);
-
+  
   const [prompt, setPrompt] = useState<string>('');
   const [settings, setSettings] = useState<Settings>({
     style: 'Cinematic',
@@ -29,32 +22,6 @@ function App() {
   const [toast, setToast] = useState<ToastInfo | null>(null);
   
   const imageSpawnCounter = useRef(0);
-
-  useEffect(() => {
-    try {
-      const savedCredits = localStorage.getItem('kreta-credits');
-      if (savedCredits !== null) {
-        setCredits(JSON.parse(savedCredits));
-      } else {
-        setCredits(INITIAL_FREE_CREDITS);
-        localStorage.setItem('kreta-credits', JSON.stringify(INITIAL_FREE_CREDITS));
-      }
-    } catch (error) {
-      console.error("Failed to load credits from localStorage", error);
-      setCredits(INITIAL_FREE_CREDITS);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (credits !== null) {
-        try {
-            localStorage.setItem('kreta-credits', JSON.stringify(credits));
-        } catch (error) {
-            console.error("Failed to save credits to localStorage", error);
-        }
-    }
-  }, [credits]);
-
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -74,25 +41,23 @@ function App() {
       return;
     }
 
-    if (credits === null || credits < settings.numImages) {
-        showToast("You don't have enough credits to generate images.", 'error');
-        setCreditsModalOpen(true);
-        return;
-    }
-
     setGenerationState('GENERATING');
 
     const currentCounter = imageSpawnCounter.current;
     const placeholders: GeneratedImage[] = Array.from({ length: settings.numImages }).map((_, index) => {
       const spawnOffset = (currentCounter + index) * 20;
+      // Calculate center screen roughly
+      const startX = window.innerWidth / 2 - 150 + (Math.random() * 40 - 20);
+      const startY = window.innerHeight / 2 - 200 + (Math.random() * 40 - 20);
+      
       return {
         id: crypto.randomUUID(),
         src: '',
-        title: 'Generating...',
+        title: 'Thinking...',
         prompt: activePrompt,
         aspectRatio: settings.aspectRatio,
-        x: 100 + spawnOffset,
-        y: 100 + spawnOffset,
+        x: startX + (index * 30),
+        y: startY + (index * 30),
         status: 'loading' as const,
       };
     });
@@ -103,11 +68,12 @@ function App() {
 
     try {
       const images = await generateImage(activePrompt, settings.aspectRatio, settings.numImages);
-      setCredits(prev => (prev !== null ? prev - settings.numImages : 0));
       
-      let title = "Generated Image";
-      if (images.length > 0) {
-        title = await generateTitle(activePrompt);
+      let title = "Creation";
+      try {
+         title = await generateTitle(activePrompt);
+      } catch (e) {
+        console.warn("Title generation failed, using default");
       }
       
       setGeneratedImages(prevImages => {
@@ -147,29 +113,25 @@ function App() {
       
       showToast(displayMessage, 'error');
     }
-  }, [prompt, settings, credits]);
+  }, [prompt, settings]);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
-        <>
-          <Header onClearCanvas={handleClearCanvas} />
-          <div className="flex flex-1 overflow-hidden">
-            <main className="flex-1 overflow-auto">
-              <Generator
-                prompt={prompt}
-                setPrompt={setPrompt}
-                settings={settings}
-                setSettings={setSettings}
-                generationState={generationState}
-                handleGenerate={handleGenerate}
-                generatedImages={generatedImages}
-                setGeneratedImages={setGeneratedImages}
-              />
-            </main>
-          </div>
-          <CreditPill credits={credits} onClick={() => setCreditsModalOpen(true)} />
-          {isCreditsModalOpen && <CreditsModal onClose={() => setCreditsModalOpen(false)} />}
-        </>
+    <div className="fixed inset-0 flex flex-col bg-transparent overflow-hidden text-white selection:bg-orange-500 selection:text-white">
+        <Header onClearCanvas={handleClearCanvas} />
+        
+        <main className="flex-1 relative overflow-hidden">
+            <Generator
+            prompt={prompt}
+            setPrompt={setPrompt}
+            settings={settings}
+            setSettings={setSettings}
+            generationState={generationState}
+            handleGenerate={handleGenerate}
+            generatedImages={generatedImages}
+            setGeneratedImages={setGeneratedImages}
+            />
+        </main>
+        
       {toast && (
         <Toast
           message={toast.message}

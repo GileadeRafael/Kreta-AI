@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
@@ -24,7 +23,8 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
         '3:4': 'aspect-[3/4]',
     };
 
-    const handleDownload = () => {
+    const handleDownload = (e: React.MouseEvent) => {
+        e.stopPropagation();
         const link = document.createElement('a');
         link.href = src;
         link.download = `${title.replace(/\s+/g, '_') || 'generated-image'}.png`;
@@ -35,43 +35,50 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
 
     return (
         <div
-            className={`absolute group overflow-hidden rounded-xl ${!isLoading ? 'cursor-grab' : 'cursor-wait'} bg-[#2d2d3d]`}
+            className={`absolute group rounded-2xl overflow-hidden ${!isLoading ? 'cursor-grab active:cursor-grabbing' : 'cursor-wait'} shadow-2xl transition-shadow duration-300 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]`}
             style={{ 
                 left: `${x}px`, 
                 top: `${y}px`, 
-                width: '300px' // Define a base width for consistency
+                width: '320px',
+                backgroundColor: '#1c1026',
+                border: '1px solid rgba(255,255,255,0.05)'
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
-            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden`}>
+            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative`}>
                 {isLoading ? (
-                    <div className="loading-placeholder"></div>
+                    <div className="loading-placeholder absolute inset-0"></div>
                 ) : (
-                    <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 animate-fade-in-blur" />
+                    <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 animate-fade-in-blur" />
                 )}
+                
+                {/* Gradient Overlay */}
+                 {!isLoading && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0715] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                 )}
             </div>
             
             {!isLoading && (
               <>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <h3 className="text-white text-sm font-medium bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md max-w-[60%] truncate">{title}</h3>
-                    <div className="flex items-center gap-1 bg-black/30 backdrop-blur-sm p-1 rounded-lg pointer-events-auto">
-                        <button onClick={handleDownload} className="p-1.5 hover:bg-white/20 rounded-md text-white transition-colors" aria-label="Download">
-                            <DownloadIcon className="w-4 h-4"/>
+                {/* Top Actions */}
+                <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-[-10px] group-hover:translate-y-0">
+                    <div className="flex bg-black/40 backdrop-blur-md rounded-full p-1 border border-white/10 shadow-lg">
+                        <button onClick={onVariateClick} className="p-2 hover:bg-violet-500 rounded-full text-white transition-colors" title="Variate">
+                            <WandSparklesIcon className="w-4 h-4"/>
                         </button>
-                        <button onClick={onZoomClick} className="p-1.5 hover:bg-white/20 rounded-md text-white transition-colors" aria-label="Zoom in">
+                        <button onClick={onZoomClick} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title="Zoom">
                             <ZoomInIcon className="w-4 h-4"/>
                         </button>
-                        <button onClick={onVariateClick} className="p-1.5 hover:bg-white/20 rounded-md text-white transition-colors" aria-label="Generate variations">
-                            <WandSparklesIcon className="w-4 h-4"/>
+                        <button onClick={handleDownload} className="p-2 hover:bg-orange-500 rounded-full text-white transition-colors" title="Download">
+                            <DownloadIcon className="w-4 h-4"/>
                         </button>
                     </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <p className="text-neutral-300 text-xs line-clamp-2">{prompt}</p>
+                {/* Bottom Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[10px] group-hover:translate-y-0 pointer-events-none">
+                    <h3 className="text-white text-base font-bold mb-1 drop-shadow-md truncate">{title}</h3>
+                    <p className="text-neutral-300 text-xs line-clamp-2 font-medium leading-relaxed drop-shadow-md">{prompt}</p>
                 </div>
               </>
             )}

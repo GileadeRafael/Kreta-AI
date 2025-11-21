@@ -30,59 +30,70 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-modal-fade-in"
+      className="fixed inset-0 bg-[#0f0715]/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-modal-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative bg-[#1c1c1c] border border-[#2d2d3d] rounded-2xl w-full max-w-lg p-8 text-center animate-modal-scale-in"
+        className="relative bg-[#1c1026] border border-violet-500/20 rounded-3xl w-full max-w-lg p-8 text-center animate-modal-scale-in shadow-[0_0_50px_rgba(139,92,246,0.15)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 bg-white/10 hover:bg-white/20 rounded-full text-neutral-300 hover:text-white transition-all duration-300"
+          className="absolute top-4 right-4 z-20 p-2 bg-white/5 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white transition-all duration-300"
           aria-label="Close"
         >
           <XIcon className="w-5 h-5" />
         </button>
 
-        <CoinIcon className="w-16 h-16 mx-auto text-amber-400 mb-4" />
-        <h2 className="text-3xl font-bold text-white mb-2">Adquirir Créditos</h2>
-        <p className="text-neutral-400 mb-8">
-          Suas criações estão esperando. Escolha um pacote para continuar gerando imagens.
+        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20 mb-6 rotate-3">
+             <CoinIcon className="w-10 h-10 text-white" />
+        </div>
+        
+        <h2 className="text-3xl font-bold text-white mb-2">Get More Credits</h2>
+        <p className="text-neutral-400 mb-8 text-sm">
+           Unlock your creativity. Choose a package to continue generating amazing images.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {creditPacks.map((pack, index) => (
             <div
               key={index}
-              className={`relative bg-neutral-800/50 border-2 rounded-xl p-6 flex flex-col items-center justify-between transition-all duration-300 ${
-                pack.popular ? 'border-sky-500 scale-105' : 'border-neutral-700 hover:border-neutral-600'
+              className={`relative bg-[#0f0715]/50 border rounded-xl p-4 flex items-center justify-between transition-all duration-300 hover:border-violet-500/50 group ${
+                pack.popular ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.15)]' : 'border-white/5'
               }`}
             >
               {pack.popular && (
-                <div className="absolute -top-3 bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  POPULAR
+                <div className="absolute -top-2.5 left-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                  Most Popular
                 </div>
               )}
-              <div className="flex items-center gap-2 mb-2">
-                <CoinIcon className="w-6 h-6 text-amber-400" />
-                <span className="text-2xl font-bold text-white">{pack.credits}</span>
+              <div className="flex items-center gap-4 text-left">
+                <div className="bg-white/5 p-2.5 rounded-lg">
+                    <CoinIcon className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                    <span className="block text-lg font-bold text-white">{pack.credits} Credits</span>
+                    <span className="text-xs text-neutral-500">Instant delivery</span>
+                </div>
               </div>
-              <p className="text-lg font-medium text-neutral-300 mb-6">{pack.price}</p>
-              <Button 
-                variant={pack.popular ? 'primary' : 'secondary'} 
-                className="w-full"
-                href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Comprar
-              </Button>
+              
+              <div className="flex items-center gap-4">
+                  <span className="text-base font-medium text-white">{pack.price}</span>
+                  <Button 
+                    variant={pack.popular ? 'gradient' : 'secondary'} 
+                    className="py-2 px-4 rounded-lg text-xs"
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Buy
+                  </Button>
+              </div>
             </div>
           ))}
         </div>
-         <p className="text-xs text-neutral-500 mt-8">
-            Você será redirecionado para o suporte para finalizar a compra.
+         <p className="text-[10px] text-neutral-600 mt-6 uppercase tracking-widest">
+            Secure payment via WhatsApp Support
           </p>
       </div>
     </div>
