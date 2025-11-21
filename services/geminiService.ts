@@ -2,9 +2,16 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to get the AI client instance
+const getAiClient = (apiKey: string) => {
+  return new GoogleGenAI({ apiKey });
+};
 
-export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
+export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number, apiKey: string): Promise<string[]> => {
+    if (!apiKey) throw new Error("API Key is required");
+    
+    const ai = getAiClient(apiKey);
+    
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
@@ -22,8 +29,11 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
     }
 };
 
-export const generateTitle = async (prompt: string): Promise<string> => {
+export const generateTitle = async (prompt: string, apiKey: string): Promise<string> => {
+    if (!apiKey) return "Untitled Artwork";
+    
     try {
+        const ai = getAiClient(apiKey);
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Create a single, concise, and artistic title (maximum 4 words) for an image generated from the following prompt. Do not provide suggestions, alternatives, or quotation marks. Just the title. Prompt: "${prompt}"`,

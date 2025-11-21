@@ -84,14 +84,15 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
         if (textarea) {
             // Reset height to auto to ensure scrollHeight is calculated correctly based on content
             textarea.style.height = 'auto';
-            // Set the height to scrollHeight or max limit
-            textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
+            // Set the height to scrollHeight or max limit, but default to small if empty
+            const newHeight = Math.min(textarea.scrollHeight, 150);
+            textarea.style.height = `${newHeight}px`;
         }
     }, [prompt]);
 
 
     return (
-        <div className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center items-end pointer-events-none" ref={wrapperRef}>
+        <div className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center items-center pointer-events-none" ref={wrapperRef}>
             <div className="w-full max-w-3xl flex flex-col items-center pointer-events-auto gap-3">
                 
                 {/* Settings Panel */}
@@ -133,13 +134,13 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
                 {/* Main Input Bar */}
                 <div className="w-full relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-orange-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
-                    <div className="relative flex items-center gap-2 bg-[#130a1b] border border-white/10 rounded-2xl p-2.5 shadow-2xl">
-                        <Button variant="ghost" className="w-10 h-10 p-0 rounded-xl flex-shrink-0 text-neutral-400 hover:text-violet-400" onClick={handleImageButtonClick}>
+                    <div className="relative flex items-center gap-2 bg-[#130a1b] border border-white/10 rounded-2xl p-2 shadow-2xl">
+                        <Button variant="ghost" className="w-10 h-10 p-0 rounded-xl flex-shrink-0 text-neutral-400 hover:text-violet-400 self-center" onClick={handleImageButtonClick}>
                             <ImagePlusIcon className="w-5 h-5"/>
                         </Button>
                         <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" multiple />
                         
-                        <div className="flex-grow flex flex-col justify-center min-h-[40px]">
+                        <div className="flex-grow flex flex-col justify-center">
                             {imagePreviews.length > 0 && (
                                 <div className="flex items-center gap-2 flex-wrap mb-2 px-1 pt-1">
                                     {imagePreviews.map((src, index) => (
@@ -164,11 +165,11 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
                                 placeholder="Imagine something amazing..."
                                 className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-neutral-500 text-base px-2 py-2 resize-none overflow-y-auto max-h-48 focus:outline-none leading-relaxed font-medium"
                                 rows={1}
-                                style={{ height: '40px' }} // Start small, effect will override
+                                style={{ height: '40px' }} 
                             />
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 self-center">
                             <Button 
                                 variant="ghost" 
                                 onClick={() => setSettingsOpen(!settingsOpen)} 
