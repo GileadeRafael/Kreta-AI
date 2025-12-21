@@ -35,52 +35,65 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
 
     return (
         <div
-            className={`absolute group rounded-2xl overflow-hidden glass-card transition-all duration-500 ${!isLoading ? 'cursor-grab active:cursor-grabbing hover:z-20 hover:scale-[1.05] shadow-2xl' : 'cursor-wait animate-pulse'}`}
+            className={`absolute group rounded-2xl overflow-hidden glass-card transition-all duration-500 ${!isLoading ? 'cursor-grab active:cursor-grabbing hover:z-20 hover:scale-[1.02] shadow-2xl' : 'cursor-wait animate-pulse'}`}
             style={{ 
                 left: `${x}px`, 
                 top: `${y}px`, 
                 width: '320px',
-                borderColor: isLoading ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
-                boxShadow: isLoading ? '0 0 40px rgba(139, 92, 246, 0.1)' : '0 20px 50px rgba(0,0,0,0.5)'
+                borderColor: isLoading ? 'rgba(163, 255, 18, 0.3)' : 'rgba(255, 255, 255, 0.08)',
+                boxShadow: isLoading ? '0 0 40px rgba(163, 255, 18, 0.1)' : '0 20px 50px rgba(0,0,0,0.4)'
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
-            {/* High-definition Glow on Hover */}
+            {/* Header Info - Always Visible */}
             {!isLoading && (
-                <div className="absolute -inset-px bg-gradient-to-br from-primary/30 to-secondary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"></div>
+                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5">
+                    <h3 className="text-neutral-300 text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 truncate leading-tight">
+                        {title}
+                    </h3>
+                    <p className="text-neutral-500 text-[9px] font-medium italic truncate opacity-70">
+                        "{prompt}"
+                    </p>
+                </div>
             )}
 
-            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative bg-black`}>
+            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative bg-black/40`}>
                 {isLoading ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 animate-pulse flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#a3ff12]/5 via-secondary/5 to-[#a3ff12]/5 animate-pulse flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
-                             <div className="w-10 h-10 border-2 border-primary/10 border-t-primary rounded-full animate-spin"></div>
-                             <span className="text-[9px] font-black tracking-[0.3em] text-primary/80 uppercase">Manifestando</span>
+                             <div className="w-8 h-8 border-2 border-[#a3ff12]/10 border-t-[#a3ff12] rounded-full animate-spin"></div>
+                             <span className="text-[8px] font-black tracking-[0.3em] text-[#a3ff12]/80 uppercase">Gerando</span>
                         </div>
                     </div>
                 ) : (
                     <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
                 )}
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                {/* Overlay for actions only */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                    <button 
+                        onClick={handleDownload} 
+                        className="p-3 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-secondary transition-all hover:scale-110 border border-white/10 shadow-lg"
+                        title="Download"
+                    >
+                        <DownloadIcon className="w-5 h-5"/>
+                    </button>
+                    <button 
+                        onClick={onZoomClick} 
+                        className="p-3 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-[#a3ff12] hover:text-black transition-all hover:scale-110 border border-white/10 shadow-lg"
+                        title="Expandir"
+                    >
+                        <ZoomInIcon className="w-5 h-5"/>
+                    </button>
+                </div>
             </div>
-            
-            {!isLoading && (
-              <>
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-500 z-10">
-                    <button onClick={handleDownload} className="p-2.5 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-secondary transition-colors border border-white/10 shadow-lg">
-                        <DownloadIcon className="w-4 h-4"/>
-                    </button>
-                    <button onClick={onZoomClick} className="p-2.5 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-primary transition-colors border border-white/10 shadow-lg">
-                        <ZoomInIcon className="w-4 h-4"/>
-                    </button>
-                </div>
 
-                <div className="p-5 relative z-10 opacity-0 group-hover:opacity-100 translate-y-[10px] group-hover:translate-y-0 transition-all duration-500 bg-gradient-to-t from-black to-transparent">
-                    <h3 className="text-white text-base font-black mb-1 futuristic-gradient-text uppercase tracking-tight">{title}</h3>
-                    <p className="text-neutral-400 text-[9px] line-clamp-1 font-bold uppercase tracking-[0.15em] opacity-80">{prompt}</p>
+            {/* Subtle Footer Tag */}
+            {!isLoading && (
+                <div className="px-4 py-1.5 flex justify-between items-center bg-black/20">
+                     <span className="text-[7px] font-bold text-neutral-600 uppercase tracking-widest">{aspectRatio} FRAME</span>
+                     <div className="w-1 h-1 rounded-full bg-[#a3ff12]/30 animate-pulse"></div>
                 </div>
-              </>
             )}
         </div>
     );

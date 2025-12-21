@@ -29,19 +29,14 @@ function App() {
   const handleClearCanvas = () => {
     setGeneratedImages([]);
     imageSpawnCounter.current = 0;
-    showToast('Canvas cleared.', 'success');
+    showToast('Canvas limpo com sucesso.', 'success');
   }
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
     if (!activePrompt.trim()) {
-      showToast('Please enter a prompt to generate an image.', 'error');
+      showToast('Por favor, digite um prompt para gerar uma imagem.', 'error');
       return;
-    }
-
-    const hasKey = await window.aistudio.hasSelectedApiKey();
-    if (!hasKey) {
-      await window.aistudio.openSelectKey();
     }
 
     setGenerationState('GENERATING');
@@ -54,7 +49,7 @@ function App() {
       return {
         id: crypto.randomUUID(),
         src: '',
-        title: 'Manifesting...',
+        title: 'Gerando...',
         prompt: activePrompt,
         aspectRatio: settings.aspectRatio,
         x: startX + (index * 40),
@@ -69,11 +64,11 @@ function App() {
     try {
       const images = await generateImage(activePrompt, settings.aspectRatio, settings.numImages);
       
-      let title = "Cosmic Vision";
+      let title = "Obra de Zion";
       try {
          title = await generateTitle(activePrompt);
       } catch (e) {
-        console.warn("Title generation failed");
+        console.warn("Falha ao gerar título");
       }
       
       setGeneratedImages(prevImages => {
@@ -95,24 +90,19 @@ function App() {
       });
 
       setGenerationState('COMPLETE');
-      showToast(`Creation manifest successfully.`, 'success');
+      showToast(`Imagem gerada com sucesso.`, 'success');
     } catch (error: any) {
-      console.error('Generation failed:', error);
+      console.error('Falha na geração:', error);
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
       
-      if (error.message?.includes("entity was not found")) {
-        await window.aistudio.openSelectKey();
-      }
-      
-      showToast(error.message || 'Transmission failed.', 'error');
+      showToast(error.message || 'Houve um erro na transmissão.', 'error');
     }
   }, [prompt, settings]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-transparent overflow-hidden text-white">
-        {/* A grid agora é renderizada via index.html para performance e interatividade global */}
         <Header onClearCanvas={handleClearCanvas} />
         
         <main className="flex-1 relative z-10">

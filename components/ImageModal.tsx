@@ -69,7 +69,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                     <div className="pt-6 flex-shrink-0">
                         <button 
                             onClick={handleDownload} 
-                            className="w-full group inline-flex items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-neutral-900/50 text-white bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 focus:ring-violet-500/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] px-4 py-3 transform hover:scale-105"
+                            className="w-full group inline-flex items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-neutral-900/50 text-black bg-[#a3ff12] hover:bg-[#b4ff3d] focus:ring-[#a3ff12]/50 shadow-[0_0_20px_rgba(163,255,18,0.3)] px-4 py-3 transform hover:scale-105"
                         >
                             <DownloadIcon className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
                             <span>Download Image</span>
@@ -92,8 +92,8 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                 /* Custom scrollbar for prompt */
                 .overflow-y-auto::-webkit-scrollbar { width: 6px; }
                 .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-                .overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
-                .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+                .overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(163, 255, 18, 0.2); border-radius: 3px; }
+                .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(163, 255, 18, 0.3); }
              `}</style>
         </div>
     );
