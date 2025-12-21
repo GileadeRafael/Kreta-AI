@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Preview } from './Preview';
 import type { Settings, GenerationState, GeneratedImage } from '../types';
@@ -34,7 +33,15 @@ export const Generator: React.FC<GeneratorProps> = ({
   const isPanning = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
 
-  const draggedImage = useRef<{ id: string; startX: number; startY: number; mouseStartX: number; mouseStartY: number; } | null>(null);
+  const draggedImage = useRef<{ 
+    id: string; 
+    startX: number; 
+    startY: number; 
+    mouseStartX: number; 
+    mouseStartY: number;
+    lastX: number;
+    lastY: number;
+  } | null>(null);
 
   const handleVariateClick = (baseImage: GeneratedImage) => {
     setPrompt(baseImage.prompt);
@@ -62,11 +69,10 @@ export const Generator: React.FC<GeneratorProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // The image card's onMouseDown handler calls stopPropagation,
-    // so this event will only fire when clicking the canvas background.
+    if (e.button !== 0) return;
     isPanning.current = true;
     lastMousePos.current = { x: e.clientX, y: e.clientY };
-    e.currentTarget.style.cursor = 'grabbing';
+    if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing';
   };
   
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -78,18 +84,29 @@ export const Generator: React.FC<GeneratorProps> = ({
     } else if (draggedImage.current) {
       const dx = (e.clientX - draggedImage.current.mouseStartX) / scale;
       const dy = (e.clientY - draggedImage.current.mouseStartY) / scale;
-      const newX = draggedImage.current.startX + dx;
-      const newY = draggedImage.current.startY + dy;
+      const finalX = draggedImage.current.startX + dx;
+      const finalY = draggedImage.current.startY + dy;
 
-      setGeneratedImages(prevImages =>
-        prevImages.map(img =>
-          img.id === draggedImage.current?.id ? { ...img, x: newX, y: newY } : img
-        )
-      );
+      // Direct DOM update for 0ms lag
+      const el = document.getElementById(`card-${draggedImage.current.id}`);
+      if (el) {
+        el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
+      }
+
+      draggedImage.current.lastX = finalX;
+      draggedImage.current.lastY = finalY;
     }
   };
 
   const handleMouseUp = () => {
+    if (draggedImage.current) {
+      const { id, lastX, lastY } = draggedImage.current;
+      // Sync React state only on release
+      setGeneratedImages(prev => prev.map(img => 
+        img.id === id ? { ...img, x: lastX, y: lastY } : img
+      ));
+    }
+
     isPanning.current = false;
     draggedImage.current = null;
     if (canvasRef.current) {
@@ -98,6 +115,7 @@ export const Generator: React.FC<GeneratorProps> = ({
   };
 
   const handleImageDragStart = useCallback((id: string, e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     const image = generatedImages.find(img => img.id === id);
@@ -108,12 +126,14 @@ export const Generator: React.FC<GeneratorProps> = ({
         startY: image.y,
         mouseStartX: e.clientX,
         mouseStartY: e.clientY,
+        lastX: image.x,
+        lastY: image.y
       };
     }
   }, [generatedImages]);
 
   return (
-    <div className="w-full h-full p-0 lg:p-0 relative" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div className="w-full h-full p-0 lg:p-0 relative select-none" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       <div 
         ref={canvasRef}
         className="w-full h-full relative overflow-hidden cursor-grab"
@@ -122,7 +142,11 @@ export const Generator: React.FC<GeneratorProps> = ({
       >
         <div 
           className="absolute top-0 left-0"
-          style={{ transform: `translate(${origin.x}px, ${origin.y}px) scale(${scale})`, transformOrigin: '0 0' }}
+          style={{ 
+            transform: `translate3d(${origin.x}px, ${origin.y}px, 0) scale(${scale})`, 
+            transformOrigin: '0 0',
+            willChange: 'transform'
+          }}
         >
           <Preview
             generationState={generationState}
@@ -149,7 +173,6 @@ export const Generator: React.FC<GeneratorProps> = ({
           onClose={() => setZoomedImage(null)}
         />
       )}
-
     </div>
   );
 };

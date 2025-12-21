@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
-import { WandSparklesIcon } from './icons/WandSparklesIcon';
 import type { GeneratedImage } from '../types';
 
 interface ImageCardProps {
@@ -11,8 +10,8 @@ interface ImageCardProps {
     onDragStart: (e: React.MouseEvent) => void;
 }
 
-export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVariateClick, onDragStart }) => {
-    const { src, title, prompt, aspectRatio, x, y, status } = image;
+export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, onVariateClick, onDragStart }) => {
+    const { id, src, title, prompt, aspectRatio, x, y, status } = image;
     const isLoading = status === 'loading';
 
     const aspectRatioMap = {
@@ -35,19 +34,20 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
 
     return (
         <div
-            className={`absolute group rounded-2xl overflow-hidden glass-card transition-all duration-500 ${!isLoading ? 'cursor-grab active:cursor-grabbing hover:z-20 hover:scale-[1.02] shadow-2xl' : 'cursor-wait animate-pulse'}`}
+            id={`card-${id}`}
+            className={`absolute group rounded-2xl overflow-hidden glass-card transition-shadow duration-500 ${!isLoading ? 'cursor-grab active:cursor-grabbing hover:z-20 hover:scale-[1.01] shadow-2xl' : 'cursor-wait animate-pulse'}`}
             style={{ 
-                left: `${x}px`, 
-                top: `${y}px`, 
+                transform: `translate3d(${x}px, ${y}px, 0)`,
                 width: '320px',
                 borderColor: isLoading ? 'rgba(163, 255, 18, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-                boxShadow: isLoading ? '0 0 40px rgba(163, 255, 18, 0.1)' : '0 20px 50px rgba(0,0,0,0.4)'
+                boxShadow: isLoading ? '0 0 40px rgba(163, 255, 18, 0.1)' : '0 20px 50px rgba(0,0,0,0.4)',
+                willChange: 'transform'
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
             {/* Header Info - Always Visible */}
             {!isLoading && (
-                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5">
+                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5 pointer-events-none select-none">
                     <h3 className="text-neutral-300 text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 truncate leading-tight">
                         {title}
                     </h3>
@@ -66,7 +66,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
                         </div>
                     </div>
                 ) : (
-                    <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                    <img src={src} alt={prompt} className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-1000 group-hover:scale-105" />
                 )}
                 
                 {/* Overlay for actions only */}
@@ -90,11 +90,11 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
 
             {/* Subtle Footer Tag */}
             {!isLoading && (
-                <div className="px-4 py-1.5 flex justify-between items-center bg-black/20">
+                <div className="px-4 py-1.5 flex justify-between items-center bg-black/20 pointer-events-none select-none">
                      <span className="text-[7px] font-bold text-neutral-600 uppercase tracking-widest">{aspectRatio} FRAME</span>
                      <div className="w-1 h-1 rounded-full bg-[#a3ff12]/30 animate-pulse"></div>
                 </div>
             )}
         </div>
     );
-};
+});

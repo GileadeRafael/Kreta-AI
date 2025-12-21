@@ -13,6 +13,7 @@ interface BottomToolbarProps {
 }
 
 const aspectRatios: Settings['aspectRatio'][] = ['1:1', '9:16', '16:9', '4:3', '3:4'];
+const imageCounts = [1, 2, 3, 4];
 
 export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt, settings, setSettings, generationState, handleGenerate }) => {
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -40,37 +41,57 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
     return (
         <div className="fixed bottom-10 left-0 right-0 z-50 px-4 flex flex-col items-center gap-4 pointer-events-none">
             
-            {/* Aspect Ratio Quick Selection */}
-            <div className={`transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] pointer-events-auto ${settingsOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95 pointer-events-none'}`}>
-                <div className="glass-card px-3 py-1.5 rounded-2xl flex gap-1.5 border-white/10 bg-black/90 shadow-2xl">
-                    {aspectRatios.map(ratio => (
-                        <button 
-                            key={ratio} 
-                            onClick={() => handleSettingChange('aspectRatio', ratio)}
-                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${settings.aspectRatio === ratio ? 'bg-[#a3ff12] text-black shadow-[0_0_15px_rgba(163,255,18,0.4)]' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
-                        >
-                            {ratio}
-                        </button>
-                    ))}
+            {/* Extended Settings Panel */}
+            <div className={`transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] pointer-events-auto ${settingsOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95 pointer-events-none'}`}>
+                <div className="glass-card p-4 rounded-[2rem] flex flex-col gap-4 border-white/10 bg-black/90 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] min-w-[320px]">
+                    
+                    {/* Aspect Ratio Section */}
+                    <div>
+                        <span className="text-[8px] font-black text-neutral-500 tracking-[0.3em] uppercase mb-2 block ml-1">Formato de Saída</span>
+                        <div className="flex gap-1.5 bg-white/5 p-1 rounded-2xl">
+                            {aspectRatios.map(ratio => (
+                                <button 
+                                    key={ratio} 
+                                    onClick={() => handleSettingChange('aspectRatio', ratio)}
+                                    className={`flex-1 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${settings.aspectRatio === ratio ? 'bg-[#a3ff12] text-black shadow-[0_0_15px_rgba(163,255,18,0.3)]' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {ratio}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Image Count Section */}
+                    <div>
+                        <span className="text-[8px] font-black text-neutral-500 tracking-[0.3em] uppercase mb-2 block ml-1">Quantidade de Quadros</span>
+                        <div className="flex gap-1.5 bg-white/5 p-1 rounded-2xl">
+                            {imageCounts.map(count => (
+                                <button 
+                                    key={count} 
+                                    onClick={() => handleSettingChange('numImages', count)}
+                                    className={`flex-1 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${settings.numImages === count ? 'bg-[#a3ff12] text-black shadow-[0_0_15px_rgba(163,255,18,0.3)]' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {count}x
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Main Command Capsule */}
             <div className="w-full max-w-2xl pointer-events-auto relative group">
-                {/* Glow Background Effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-[2rem] blur-2xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
                 
                 <div className="relative glass-card rounded-[2rem] p-2 flex items-center gap-2 border-white/10 bg-black shadow-2xl">
-                    {/* Settings Trigger */}
                     <button 
                         onClick={() => setSettingsOpen(!settingsOpen)}
-                        className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${settingsOpen ? 'bg-[#a3ff12] text-black' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+                        className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${settingsOpen ? 'bg-[#a3ff12] text-black shadow-[0_0_15px_rgba(163,255,18,0.4)]' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
                         title="Configurações"
                     >
                         <GearIcon className="w-5 h-5" />
                     </button>
 
-                    {/* Textarea Wrapper */}
                     <div className="flex-grow min-h-[48px] flex items-center py-1">
                         <textarea
                             ref={textareaRef}
@@ -83,7 +104,6 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
                         />
                     </div>
 
-                    {/* Generate Button - Neon Green Update */}
                     <button 
                         onClick={() => handleGenerate()} 
                         disabled={generationState === 'GENERATING' || !prompt.trim()}
@@ -98,7 +118,6 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({ prompt, setPrompt,
                 </div>
             </div>
 
-            {/* Subtitle / Version */}
             <div className="text-[9px] uppercase font-bold tracking-[0.4em] text-neutral-600 select-none">
                 Zion Frame <span className="text-[#a3ff12]/40 mx-1">●</span> v2.5 Stable
             </div>
