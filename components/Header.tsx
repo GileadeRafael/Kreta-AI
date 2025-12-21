@@ -8,31 +8,30 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onClearCanvas }) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 w-full transition-all duration-300">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0715] via-[#0f0715]/80 to-transparent pointer-events-none" />
-      <div className="mx-auto px-6 py-4 relative">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-                <div className="absolute inset-0 bg-violet-500 blur-lg opacity-40 rounded-full"></div>
-                <img 
-                src="https://i.imgur.com/Q5ZTXdw.png" 
-                alt="Kreta AI Logo" 
-                className="w-9 h-9 relative z-10 drop-shadow-md" 
-                />
-            </div>
-            <div className="flex flex-col">
-                <span className="font-bold text-lg tracking-tight text-white leading-none">Kreta AI</span>
-                <span className="text-[10px] text-violet-400 font-medium tracking-wider uppercase">Creative Suite</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={onClearCanvas} className="py-2 px-4 text-xs border-white/5 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-full">
-                <TrashIcon className="w-4 h-4 mr-2 text-neutral-400 group-hover:text-red-400 transition-colors"/>
-                <span className="text-neutral-300">Clear</span>
-            </Button>
-          </div>
+    <header className="fixed top-0 left-0 right-0 z-40 p-6 flex justify-between items-center pointer-events-none">
+      <div className="flex items-center gap-4 pointer-events-auto">
+        <div className="relative group">
+            <div className="absolute inset-0 bg-primary blur-xl opacity-30 group-hover:opacity-60 transition-opacity"></div>
+            <img 
+              src="https://i.imgur.com/dMgrGmM.png" 
+              alt="Zion Frame" 
+              className="w-10 h-10 relative z-10 drop-shadow-[0_0_10px_rgba(139,92,246,0.5)]" 
+            />
         </div>
+        <div className="flex flex-col">
+            <h1 className="text-xl font-black tracking-tighter text-white uppercase">Zion Frame</h1>
+            <span className="text-[9px] font-bold text-neutral-500 tracking-[0.2em] uppercase">Gerador de imagens com IA</span>
+        </div>
+      </div>
+
+      <div className="pointer-events-auto flex gap-4">
+        <button 
+          onClick={onClearCanvas}
+          className="glass-card px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-white/5 transition-all text-xs font-bold text-neutral-400 hover:text-white border-white/5"
+        >
+          <TrashIcon className="w-4 h-4" />
+          <span>Reset Canvas</span>
+        </button>
       </div>
     </header>
   );

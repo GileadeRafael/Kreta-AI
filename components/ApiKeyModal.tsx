@@ -19,8 +19,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
     <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-modal-fade-in">
       <div className="relative bg-[#1c1c1c] border border-[#2d2d3d] rounded-2xl w-full max-w-md p-8 text-center animate-modal-scale-in">
         <img 
-          src="https://i.imgur.com/Q5ZTXdw.png" 
-          alt="Kreta AI Logo" 
+          src="https://i.imgur.com/dMgrGmM.png" 
+          alt="Zion Frame Logo" 
           className="w-16 h-16 mx-auto mb-4" 
         />
         <h2 className="text-2xl font-bold text-white mb-2">Use Sua Própria Chave de API</h2>

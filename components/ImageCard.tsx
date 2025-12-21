@@ -27,7 +27,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
         e.stopPropagation();
         const link = document.createElement('a');
         link.href = src;
-        link.download = `${title.replace(/\s+/g, '_') || 'generated-image'}.png`;
+        link.download = `${title.replace(/\s+/g, '_')}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -35,50 +35,50 @@ export const ImageCard: React.FC<ImageCardProps> = ({ image, onZoomClick, onVari
 
     return (
         <div
-            className={`absolute group rounded-2xl overflow-hidden ${!isLoading ? 'cursor-grab active:cursor-grabbing' : 'cursor-wait'} shadow-2xl transition-shadow duration-300 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]`}
+            className={`absolute group rounded-2xl overflow-hidden glass-card transition-all duration-500 ${!isLoading ? 'cursor-grab active:cursor-grabbing hover:z-20 hover:scale-[1.05] shadow-2xl' : 'cursor-wait animate-pulse'}`}
             style={{ 
                 left: `${x}px`, 
                 top: `${y}px`, 
                 width: '320px',
-                backgroundColor: '#1c1026',
-                border: '1px solid rgba(255,255,255,0.05)'
+                borderColor: isLoading ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
+                boxShadow: isLoading ? '0 0 40px rgba(139, 92, 246, 0.1)' : '0 20px 50px rgba(0,0,0,0.5)'
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
-            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative`}>
+            {/* High-definition Glow on Hover */}
+            {!isLoading && (
+                <div className="absolute -inset-px bg-gradient-to-br from-primary/30 to-secondary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"></div>
+            )}
+
+            <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative bg-black`}>
                 {isLoading ? (
-                    <div className="loading-placeholder absolute inset-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 animate-pulse flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                             <div className="w-10 h-10 border-2 border-primary/10 border-t-primary rounded-full animate-spin"></div>
+                             <span className="text-[9px] font-black tracking-[0.3em] text-primary/80 uppercase">Manifestando</span>
+                        </div>
+                    </div>
                 ) : (
-                    <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 animate-fade-in-blur" />
+                    <img src={src} alt={prompt} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
                 )}
                 
-                {/* Gradient Overlay */}
-                 {!isLoading && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0715] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
             </div>
             
             {!isLoading && (
               <>
-                {/* Top Actions */}
-                <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-[-10px] group-hover:translate-y-0">
-                    <div className="flex bg-black/40 backdrop-blur-md rounded-full p-1 border border-white/10 shadow-lg">
-                        <button onClick={onVariateClick} className="p-2 hover:bg-violet-500 rounded-full text-white transition-colors" title="Variate">
-                            <WandSparklesIcon className="w-4 h-4"/>
-                        </button>
-                        <button onClick={onZoomClick} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title="Zoom">
-                            <ZoomInIcon className="w-4 h-4"/>
-                        </button>
-                        <button onClick={handleDownload} className="p-2 hover:bg-orange-500 rounded-full text-white transition-colors" title="Download">
-                            <DownloadIcon className="w-4 h-4"/>
-                        </button>
-                    </div>
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-500 z-10">
+                    <button onClick={handleDownload} className="p-2.5 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-secondary transition-colors border border-white/10 shadow-lg">
+                        <DownloadIcon className="w-4 h-4"/>
+                    </button>
+                    <button onClick={onZoomClick} className="p-2.5 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-primary transition-colors border border-white/10 shadow-lg">
+                        <ZoomInIcon className="w-4 h-4"/>
+                    </button>
                 </div>
 
-                {/* Bottom Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[10px] group-hover:translate-y-0 pointer-events-none">
-                    <h3 className="text-white text-base font-bold mb-1 drop-shadow-md truncate">{title}</h3>
-                    <p className="text-neutral-300 text-xs line-clamp-2 font-medium leading-relaxed drop-shadow-md">{prompt}</p>
+                <div className="p-5 relative z-10 opacity-0 group-hover:opacity-100 translate-y-[10px] group-hover:translate-y-0 transition-all duration-500 bg-gradient-to-t from-black to-transparent">
+                    <h3 className="text-white text-base font-black mb-1 futuristic-gradient-text uppercase tracking-tight">{title}</h3>
+                    <p className="text-neutral-400 text-[9px] line-clamp-1 font-bold uppercase tracking-[0.15em] opacity-80">{prompt}</p>
                 </div>
               </>
             )}

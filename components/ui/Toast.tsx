@@ -12,30 +12,26 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
   useEffect(() => {
     setVisible(true);
-    const timer = setTimeout(() => {
-      handleClose();
-    }, 3800);
+    const timer = setTimeout(() => handleClose(), 3800);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClose = () => {
     setVisible(false);
-    setTimeout(onClose, 200); // allow for fade-out animation
-  };
-
-  const baseStyles = 'fixed top-5 right-5 z-[100] flex items-center p-4 max-w-sm w-full rounded-xl shadow-lg border backdrop-blur-md transition-all duration-200';
-  const typeStyles = {
-    success: 'bg-violet-500/20 border-violet-500/50 text-white shadow-[0_0_15px_rgba(139,92,246,0.2)]',
-    error: 'bg-red-500/20 border-red-500/50 text-white',
+    setTimeout(onClose, 300);
   };
 
   return (
-    <div className={`${baseStyles} ${typeStyles[type]} ${visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
-      <div className="flex-grow text-sm font-medium">{message}</div>
-      <button onClick={handleClose} className="ml-4 p-1 rounded-full hover:bg-white/10 transition-colors">
-        <XIcon className="w-5 h-5" />
-      </button>
+    <div className={`fixed bottom-24 right-8 z-[100] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+      <div className={`glass-card p-4 rounded-2xl flex items-center gap-4 min-w-[280px] border-l-4 ${type === 'success' ? 'border-l-primary' : 'border-l-secondary'}`}>
+        <div className="flex-grow">
+          <p className="text-[10px] uppercase font-bold text-neutral-500 mb-0.5 tracking-widest">{type === 'success' ? 'Operation Success' : 'System Alert'}</p>
+          <p className="text-sm font-semibold text-white">{message}</p>
+        </div>
+        <button onClick={handleClose} className="p-1 hover:bg-white/10 rounded-lg text-neutral-500">
+          <XIcon className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 };

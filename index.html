@@ -2,92 +2,86 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="https://i.imgur.com/Q5ZTXdw.png" />
+    <link rel="icon" type="image/png" href="https://i.imgur.com/dMgrGmM.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kreta AI</title>
+    <title>Zion Frame | Cosmic Creative Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: '#8b5cf6', // Violet
-              secondary: '#f97316', // Orange
-              dark: '#0f0715', // Deep Purple/Black
-              surface: '#1c1026', // Lighter Purple/Black
+              primary: '#8b5cf6',
+              secondary: '#f97316',
+              dark: '#000000',
+              surface: '#0a0a0a',
+              glass: 'rgba(255, 255, 255, 0.03)',
+              'glass-border': 'rgba(255, 255, 255, 0.12)',
+            },
+            fontFamily: {
+              sans: ['"Bricolage Grotesque"', 'sans-serif'],
             },
             animation: {
-              'gradient-x': 'gradient-x 3s ease infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
             },
             keyframes: {
-              'gradient-x': {
-                '0%, 100%': {
-                  'background-size': '200% 200%',
-                  'background-position': 'left center'
-                },
-                '50%': {
-                  'background-size': '200% 200%',
-                  'background-position': 'right center'
-                },
-              },
-            },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
           }
         }
       }
     </script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+      
       body {
         font-family: "Bricolage Grotesque", sans-serif;
-        background-color: #0f0715;
-        /* Neutral dark grey dots for "dotted black" effect */
-        background-image: radial-gradient(#3f3f46 1.5px, transparent 0);
-        background-size: 30px 30px;
+        background-color: #000000;
         color: #e5e7eb;
-        overflow: hidden; /* Prevent body scroll, handle in App */
-      }
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1c1026;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #4c1d95;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #6d28d9;
-      }
-      
-      .glass-panel {
-        background: rgba(28, 16, 38, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        margin: 0;
       }
 
-      @keyframes fade-in-blur {
-        from { filter: blur(16px); opacity: 0; }
-        to { filter: blur(0px); opacity: 1; }
+      /* Malha de Pontos com 30% de opacidade */
+      .dot-grid {
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+        background-size: 32px 32px;
+        pointer-events: none;
+        z-index: 0;
       }
-      .animate-fade-in-blur {
-        animation: fade-in-blur 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+
+      .glass-card {
+        background: rgba(10, 10, 10, 0.75);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.9);
       }
-      
-      @keyframes loading-gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+
+      .futuristic-gradient-text {
+        background: linear-gradient(135deg, #8b5cf6, #f97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
-      .loading-placeholder {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(-45deg, #7c3aed, #ec4899, #f97316);
-        background-size: 400% 400%;
-        animation: loading-gradient 3s ease infinite;
+
+      .vignette {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.7) 100%);
+        pointer-events: none;
+        z-index: 1;
       }
+
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #312e81; border-radius: 10px; }
     </style>
   <script type="importmap">
 {
@@ -100,8 +94,10 @@
 }
 </script>
 </head>
-  <body class="bg-[#0f0715] text-white h-screen w-screen">
-    <div id="root" class="h-full w-full"></div>
+  <body class="antialiased selection:bg-primary/30">
+    <div class="dot-grid"></div>
+    <div class="vignette"></div>
+    <div id="root" class="h-screen w-screen relative overflow-hidden z-10"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
