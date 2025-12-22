@@ -41,7 +41,6 @@ function App() {
   useEffect(() => {
     const checkKey = async () => {
       // Prioridade 1: Chave injetada via Env Var (Vercel)
-      // Nota: process.env.API_KEY é injetado pelo ambiente de build/runtime
       const envKey = process.env.API_KEY;
       if (envKey && envKey !== "undefined" && envKey !== "") {
         setHasKey(true);
@@ -57,7 +56,8 @@ function App() {
           setHasKey(false);
         }
       } else {
-        // Se não houver process.env e não estiver no AI Studio, assumimos que falta chave
+        // Se não houver process.env no carregamento inicial, mantemos bloqueado
+        // mas permitimos o desbloqueio manual pelo botão para ambientes externos
         setHasKey(false);
       }
     };
@@ -70,13 +70,15 @@ function App() {
       try {
         await window.aistudio.openSelectKey();
         setHasKey(true);
-        showToast('Engine Zion Sincronizada.', 'success');
+        showToast('Zion Engine Sincronizada com AI Studio.', 'success');
       } catch (e) {
-        showToast('Falha ao conectar chave via AI Studio.', 'error');
+        showToast('Falha ao conectar chave.', 'error');
       }
     } else {
-      // No Vercel, o botão explica o procedimento
-      showToast('No Vercel, configure a variável API_KEY nas configurações do seu projeto.', 'error');
+      // No Vercel, se o usuário clica no botão, permitimos a entrada
+      // A validação real acontecerá na primeira chamada de API usando process.env.API_KEY
+      setHasKey(true);
+      showToast('Acessando Zion Grid via Environment Variables...', 'success');
     }
   };
 
@@ -129,10 +131,13 @@ function App() {
       setGenerationState('COMPLETE');
     } catch (error: any) {
       let msg = error.message || 'Erro na transmissão Zion.';
-      if (msg.includes("Requested entity was not found")) {
-        msg = "Chave inválida. Reconecte seu acesso no Google AI Studio ou verifique suas env vars.";
+      
+      // Tratamento de erro de chave inválida ou não configurada
+      if (msg.includes("401") || msg.includes("API key not valid") || msg.includes("Requested entity was not found")) {
+        msg = "Chave API não detectada ou inválida no Vercel. Verifique suas Environment Variables.";
         setHasKey(false);
       }
+      
       showToast(msg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
@@ -164,7 +169,7 @@ function App() {
           </h1>
           
           <p className="text-neutral-400 text-sm mb-12 leading-relaxed font-medium">
-            A engine está offline. No <strong>Vercel</strong>, adicione <code>API_KEY</code> nas Environment Variables. No <strong>AI Studio</strong>, use o botão abaixo.
+            Se você configurou a <code>API_KEY</code> no Vercel, clique abaixo para forçar a inicialização da engine.
           </p>
 
           <button 

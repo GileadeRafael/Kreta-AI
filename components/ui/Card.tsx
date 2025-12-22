@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface CardProps {
@@ -8,7 +9,7 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ children, className }) => {
   return (
     <div
-      className={`bg-[#1c1c1c] border border-[#2d2d3d] rounded-2xl p-3 transition-all duration-300 hover:border-sky-500/50 hover:shadow-[0_0_20px_rgba(56,189,248,0.1)] ${className}`}
+      className={`bg-[#1c1c1c] border border-white/5 rounded-2xl p-3 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_20px_rgba(163,255,18,0.05)] ${className}`}
     >
       {children}
     </div>
