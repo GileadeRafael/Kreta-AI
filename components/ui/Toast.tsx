@@ -13,7 +13,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
   useEffect(() => {
     setVisible(true);
-    const timer = setTimeout(() => handleClose(), 3800);
+    const timer = setTimeout(() => handleClose(), 4500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -23,11 +23,11 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   };
 
   return (
-    <div className={`fixed bottom-24 right-8 z-[100] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+    <div className={`fixed bottom-10 right-8 z-[100] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
       <div className={`glass-card p-5 rounded-2xl flex items-center gap-4 min-w-[320px] border-l-4 ${type === 'success' ? 'border-l-primary shadow-[0_10px_40px_rgba(163,255,18,0.1)]' : 'border-l-red-500 shadow-[0_10px_40px_rgba(239,68,68,0.1)]'}`}>
         <div className="flex-grow">
-          <p className="text-[10px] uppercase font-black text-neutral-500 mb-1 tracking-widest leading-none">
-            {type === 'success' ? 'Zion Notification' : 'System Diagnostic'}
+          <p className={`text-[10px] uppercase font-black mb-1 tracking-widest leading-none ${type === 'success' ? 'text-primary' : 'text-red-500'}`}>
+            {type === 'success' ? 'Zion Notification' : 'System Alert'}
           </p>
           <p className="text-sm font-bold text-white leading-tight">{message}</p>
         </div>
