@@ -1,71 +1,78 @@
+
 import React, { useState } from 'react';
-import { Button } from './ui/Button';
+import { XIcon } from './icons/XIcon';
+import { KeyIcon } from './icons/KeyIcon';
 
 interface ApiKeyModalProps {
   onSubmit: (apiKey: string) => void;
+  onCancel: () => void;
 }
 
-export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit }) => {
+export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ onSubmit, onCancel }) => {
   const [apiKey, setApiKey] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (apiKey.trim()) {
-        onSubmit(apiKey);
+    if (apiKey.trim().length > 10) {
+        onSubmit(apiKey.trim());
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-modal-fade-in">
-      <div className="relative bg-[#1c1c1c] border border-[#2d2d3d] rounded-2xl w-full max-w-md p-8 text-center animate-modal-scale-in">
-        <img 
-          src="https://i.imgur.com/dMgrGmM.png" 
-          alt="Zion Frame Logo" 
-          className="w-16 h-16 mx-auto mb-4" 
-        />
-        <h2 className="text-2xl font-bold text-white mb-2">Use Sua Própria Chave de API</h2>
-        <p className="text-neutral-400 mb-6 text-sm leading-relaxed">
-          Para usar o poder do modelo Imagen do Google, você precisa de sua própria chave. O Google exige que o faturamento esteja ativado, mas isso <strong>não significa que você será cobrado imediatamente</strong>.
-          Sua conta inclui um <strong>generoso nível de uso gratuito</strong> e novos usuários geralmente recebem <strong>créditos gratuitos</strong> para começar.
-          {' '}
-          <a
-            href="https://cloud.google.com/billing/docs/how-to/enable-billing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sky-400 hover:text-sky-300 underline"
-          >
-            Saiba mais
-          </a>.
+    <div className="fixed inset-0 bg-black/95 z-[110] flex items-center justify-center p-6 backdrop-blur-3xl animate-fade-in">
+      <div 
+        className="relative bg-[#050505] border border-white/10 rounded-[3rem] w-full max-w-lg p-12 text-center shadow-[0_0_150px_rgba(163,255,18,0.1)] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-secondary/20 blur-[100px]"></div>
+        
+        <button 
+            onClick={onCancel}
+            className="absolute top-8 right-8 text-neutral-500 hover:text-white transition-colors p-2"
+        >
+            <XIcon className="w-6 h-6" />
+        </button>
+
+        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-white/10 shadow-inner">
+          <KeyIcon className="w-10 h-10 text-primary" />
+        </div>
+
+        <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Sync Zion Grid</h2>
+        <p className="text-neutral-400 mb-10 text-sm leading-relaxed font-medium">
+          Insira sua chave do Google AI Studio abaixo. <br/>
+          Sua chave é armazenada <span className="text-white">apenas localmente</span> em seu navegador.
         </p>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Cole sua chave de API aqui"
-            className="w-full bg-[#0a0a0f] border border-[#2d2d3d] rounded-lg text-sm px-4 py-3 mb-4 focus:ring-2 focus:ring-sky-500 text-center text-white"
-          />
-          <p className="text-xs text-neutral-500 mb-6 px-4">
-            Sua chave é armazenada localmente em seu navegador e nunca é enviada para nossos servidores.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+        <form onSubmit={handleSubmit} className="relative z-10">
+          <div className="group relative mb-8">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur opacity-25 group-focus-within:opacity-100 transition duration-500"></div>
+            <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Cole seu Token aqui..."
+                className="relative w-full bg-black/50 border border-white/10 rounded-2xl text-sm px-6 py-5 focus:ring-1 focus:ring-primary/50 text-center text-white placeholder-neutral-700 outline-none transition-all"
+                autoFocus
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={apiKey.trim().length < 10}
+            className="w-full bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.4em] transition-all transform active:scale-95 disabled:opacity-20 shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:bg-primary"
+          >
+            Sincronizar
+          </button>
+          
+          <div className="mt-8">
             <a
               href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex-1 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 text-white bg-[#2d2d3d] hover:bg-[#3f3f4d] px-4 py-2.5"
+              className="text-[10px] font-black text-neutral-600 uppercase tracking-widest hover:text-primary transition-colors"
             >
-              Obter Chave de API
+              Ainda não tem uma chave? Clique aqui
             </a>
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full flex-1 py-2.5"
-              disabled={!apiKey.trim()}
-            >
-              Continuar
-            </Button>
           </div>
         </form>
       </div>

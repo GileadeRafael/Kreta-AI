@@ -7,14 +7,15 @@ import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 import { KeyIcon } from './components/icons/KeyIcon';
 
-// Declare aistudio globally to match the pre-configured environment
+// Declare aistudio globally following guidelines
 declare global {
   interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
     openSelectKey: () => Promise<void>;
   }
   interface Window {
-    aistudio: AIStudio;
+    // Fix: All declarations of 'aistudio' must have identical modifiers. Adding '?' to match environment.
+    aistudio?: AIStudio;
   }
 }
 
@@ -39,53 +40,48 @@ function App() {
     setTimeout(() => setToast(null), 5000);
   }, []);
 
-  // Verifica o estado da chave no carregamento
+  // Use only aistudio.hasSelectedApiKey for key checking as per guidelines
   useEffect(() => {
-    const checkKeyStatus = async () => {
-      try {
-        if (window.aistudio) {
+    const checkKey = async () => {
+      if (window.aistudio) {
+        try {
           const selected = await window.aistudio.hasSelectedApiKey();
           setHasKey(selected);
-        } else {
-          // Se não estiver no ambiente AI Studio, assume que precisa conectar
+        } catch (e) {
+          console.warn("AI Studio Key check failed", e);
           setHasKey(false);
         }
-      } catch (e) {
+      } else {
         setHasKey(false);
       }
     };
     
-    // Pequeno intervalo para o script do ambiente carregar
-    const timer = setTimeout(checkKeyStatus, 800);
+    const timer = setTimeout(checkKey, 500);
     return () => clearTimeout(timer);
   }, []);
 
   const handleConnectKey = async () => {
-    try {
-      if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+    if (window.aistudio) {
+      try {
         await window.aistudio.openSelectKey();
-        // Conforme diretriz: assume sucesso após o trigger para evitar race conditions
+        // GUIDELINE: Assume the key selection was successful after triggering openSelectKey() and proceed to the app.
         setHasKey(true);
-        showToast('Conexão iniciada! Selecione seu projeto no diálogo do Google.', 'success');
-      } else {
-        // Fallback: se o objeto não existe, o usuário pode estar fora do frame esperado
-        showToast('Ambiente de conexão não detectado. Use o Preview do AI Studio.', 'error');
-        console.error("window.aistudio is not defined");
+        showToast('Conectado à Zion Grid.', 'success');
+      } catch (e) {
+        showToast('Erro ao abrir seletor de chave.', 'error');
       }
-    } catch (e) {
-      showToast('Falha ao abrir o seletor de chaves.', 'error');
     }
   };
 
   const handleClearCanvas = useCallback(() => {
     setGeneratedImages([]);
-    showToast('Grid limpo.', 'success');
+    showToast('Canvas resetado.', 'success');
   }, [showToast]);
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
     if (!activePrompt.trim()) {
-      showToast('Digite um prompt para criar.', 'error');
+      showToast('O que devemos criar hoje?', 'error');
       return;
     }
 
@@ -93,7 +89,7 @@ function App() {
     const placeholders: GeneratedImage[] = Array.from({ length: settings.numImages }).map((_, index) => ({
       id: crypto.randomUUID(),
       src: '',
-      title: 'Criando...',
+      title: 'Materializando...',
       prompt: activePrompt,
       aspectRatio: settings.aspectRatio,
       x: window.innerWidth / 2 - 160 + (index * 40),
@@ -125,10 +121,11 @@ function App() {
 
       setGenerationState('COMPLETE');
     } catch (error: any) {
-      let msg = error.message || 'Erro na engine de geração.';
+      let msg = error.message || 'Erro na transmissão de dados.';
+      // GUIDELINE: If the request fails with "Requested entity was not found.", reset key state
       if (msg.includes("Requested entity was not found")) {
-        msg = "Chave inválida. Por favor, reconecte sua API Key.";
-        setHasKey(false); // Reseta para pedir nova chave
+        msg = "Sessão expirada. Por favor, selecione sua chave novamente.";
+        setHasKey(false);
       }
       showToast(msg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
@@ -139,50 +136,53 @@ function App() {
 
   if (hasKey === null) {
     return <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <div className="w-10 h-10 border-2 border-white/10 border-t-primary rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-2 border-white/5 border-t-primary rounded-full animate-spin"></div>
     </div>;
   }
 
   if (!hasKey) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black p-6 z-[100]">
-        <div className="dot-grid opacity-20"></div>
-        <div className="relative glass-card p-12 rounded-[3.5rem] border-white/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_100px_rgba(163,255,18,0.1)]">
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#a3ff12]/20 blur-[80px]"></div>
+        <div className="dot-grid opacity-30"></div>
+        <div className="relative glass-card p-12 rounded-[3.5rem] border-white/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_120px_rgba(163,255,18,0.15)]">
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px]"></div>
+          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-secondary/10 blur-[100px]"></div>
           
-          <div className="w-24 h-24 bg-[#a3ff12]/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-[#a3ff12]/20 shadow-[0_0_30px_rgba(163,255,18,0.1)]">
-            <KeyIcon className="w-12 h-12 text-[#a3ff12]" />
+          <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl flex items-center justify-center mx-auto mb-10 border border-white/10 shadow-2xl">
+            <KeyIcon className="w-12 h-12 text-primary" />
           </div>
 
-          <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
-            Potencialize sua <br/><span className="text-[#a3ff12]">Criatividade</span>
+          <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
+            Ative o <br/><span className="futuristic-gradient-text">Zion Frame</span>
           </h1>
           
-          <p className="text-neutral-400 text-sm mb-10 leading-relaxed font-medium">
-            O Zion Frame utiliza a infraestrutura do Google AI Studio. Conecte sua conta para usar sua própria cota gratuita de geração de imagens.
+          <p className="text-neutral-400 text-sm mb-12 leading-relaxed font-medium">
+            Para iniciar a geração, conecte sua chave de acesso paga do Google AI Studio.
           </p>
 
           <button 
             onClick={handleConnectKey}
-            className="w-full bg-[#a3ff12] hover:bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-[0_20px_40px_rgba(163,255,18,0.2)] hover:shadow-[0_0_50px_rgba(163,255,18,0.4)] pointer-events-auto"
+            className="w-full bg-primary hover:bg-white text-black font-black py-6 rounded-2xl uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-[0_20px_50px_rgba(163,255,18,0.3)] hover:shadow-[0_0_60px_rgba(163,255,18,0.5)] cursor-pointer relative z-50"
           >
-            Conectar minha API Key
+            Conectar Zion Key
           </button>
 
-          <div className="mt-8 flex flex-col gap-3">
-            <a 
-              href="https://aistudio.google.com/app/apikey" 
-              target="_blank" 
-              className="text-[10px] text-[#a3ff12] uppercase font-bold tracking-widest hover:underline"
-            >
-              Não tem uma chave? Criar no Google Studio →
-            </a>
+          <div className="mt-10 flex flex-col gap-4">
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
-              className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest hover:text-white transition-colors"
+              rel="noopener noreferrer"
+              className="text-[10px] text-primary uppercase font-black tracking-widest hover:underline"
             >
-              Saiba mais sobre cotas gratuitas e faturamento
+              Configurar Faturamento (ai.google.dev/gemini-api/docs/billing) →
+            </a>
+            <a 
+              href="https://aistudio.google.com/app/apikey" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] text-neutral-500 uppercase font-black tracking-widest hover:text-white"
+            >
+              Obter chave no AI Studio →
             </a>
           </div>
         </div>
