@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
@@ -7,17 +8,26 @@ export const generateImage = async (
     numImages: number,
     quality: Settings['quality']
 ): Promise<string[]> => {
-    // CRÍTICO: Instanciar apenas aqui dentro. Se process.env.API_KEY estiver vazio aqui, 
-    // significa que o diálogo do AI Studio não foi concluído ou falhou.
-    if (!process.env.API_KEY) {
-        throw new Error("Chave de API não detectada. Por favor, reconecte sua conta.");
+    // The API key must be obtained from process.env.API_KEY
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+        throw new Error("Você precisa conectar sua API Key antes de gerar imagens.");
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const modelName = quality === 'Standard' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
 
     const generateSingle = async (): Promise<string | null> => {
         try {
+            // Create a new GoogleGenAI instance right before making an API call to ensure it uses the up-to-date key
+            const ai = new GoogleGenAI({ apiKey });
+            
+            // Configure imageSize based on quality for gemini-3-pro-image-preview
+            let imageSize: "1K" | "2K" | "4K" | undefined = undefined;
+            if (modelName === 'gemini-3-pro-image-preview') {
+                imageSize = quality === '4K' ? '4K' : (quality === 'HD' ? '2K' : '1K');
+            }
+
             const response = await ai.models.generateContent({
                 model: modelName,
                 contents: {
@@ -26,11 +36,12 @@ export const generateImage = async (
                 config: {
                     imageConfig: {
                         aspectRatio: aspectRatio,
-                        ...(modelName === 'gemini-3-pro-image-preview' && { imageSize: "1K" })
+                        ...(imageSize && { imageSize })
                     }
                 },
             });
 
+            // Iterate through all parts to find the image part as per guidelines
             const candidates = response.candidates?.[0]?.content?.parts || [];
             for (const part of candidates) {
                 if (part.inlineData) {
@@ -40,38 +51,43 @@ export const generateImage = async (
             return null;
         } catch (error: any) {
             console.error(`Erro na geração (${modelName}):`, error);
-            if (error.message?.includes("Requested entity was not found")) {
-                throw new Error("Projeto inválido ou sem cota. Verifique seu Google AI Studio.");
-            }
+            
             if (error.message?.includes("quota") || error.message?.includes("429")) {
-                throw new Error("Cota pessoal atingida. O Google renova sua cota gratuita periodicamente.");
+                throw new Error("Cota de uso excedida no Google AI Studio. Tente novamente em alguns minutos ou alterne para outro projeto.");
             }
+            
             throw error;
         }
     };
 
-    const promises = Array.from({ length: numImages }).map(() => generateSingle());
-    const results = await Promise.all(promises);
-    const images = results.filter((img): img is string => img !== null);
+    try {
+        const promises = Array.from({ length: numImages }).map(() => generateSingle());
+        const results = await Promise.all(promises);
+        const images = results.filter((img): img is string => img !== null);
 
-    if (images.length === 0) {
-        throw new Error("Não foi possível gerar imagens com o prompt atual.");
+        if (images.length === 0) {
+            throw new Error("A IA não conseguiu processar este prompt. Tente algo mais descritivo.");
+        }
+
+        return images;
+    } catch (error: any) {
+        throw error;
     }
-
-    return images;
 };
 
 export const generateTitle = async (prompt: string): Promise<string> => {
-    if (!process.env.API_KEY) return "Visão Infinita";
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return "Obra Digital";
     
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview', 
-            contents: `Crie um título poético (3 palavras max) para: "${prompt}". Retorne apenas o texto.`,
+            contents: `Crie um título artístico muito curto (3 palavras) para: "${prompt}". Retorne apenas o título.`,
         });
-        return response.text?.trim() || "Visão Infinita";
+        // Access text property directly (not as a method)
+        return response.text?.trim() || "Obra Digital";
     } catch (error) {
-        return "Sem Título";
+        return "Obra Digital";
     }
 };

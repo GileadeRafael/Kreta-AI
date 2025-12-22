@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Generator } from './components/Generator';
@@ -5,6 +6,18 @@ import { Toast } from './components/ui/Toast';
 import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 import { KeyIcon } from './components/icons/KeyIcon';
+
+// Define the global AIStudio interface to avoid conflicts and resolve TS errors
+interface AIStudio {
+  hasSelectedApiKey: () => Promise<boolean>;
+  openSelectKey: () => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    readonly aistudio: AIStudio;
+  }
+}
 
 function App() {
   const [hasKey, setHasKey] = useState<boolean | null>(null);
@@ -30,37 +43,39 @@ function App() {
   useEffect(() => {
     const checkKey = async () => {
       try {
-        if (window.aistudio) {
+        // Tenta verificar se já existe uma chave selecionada
+        if (typeof window.aistudio !== 'undefined') {
           const selected = await window.aistudio.hasSelectedApiKey();
           setHasKey(selected);
         } else {
-          // Fallback caso o objeto demore a injetar
+          // Se o objeto não existir, provavelmente estamos em um ambiente 
+          // onde a seleção manual é necessária
           setHasKey(false);
         }
       } catch (e) {
-        console.error("Erro ao verificar chave:", e);
+        console.warn("Aguardando inicialização do ambiente AI Studio...");
         setHasKey(false);
       }
     };
-    checkKey();
+    
+    // Pequeno delay para garantir que scripts externos de ambiente carreguem
+    const timer = setTimeout(checkKey, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleConnectKey = async () => {
     try {
-      if (!window.aistudio) {
-        showToast('Sistema de autenticação não carregado. Recarregue a página.', 'error');
-        return;
+      if (typeof window.aistudio !== 'undefined') {
+        await window.aistudio.openSelectKey();
+        // Conforme as regras, assumimos sucesso após acionar o diálogo
+        setHasKey(true);
+        showToast('Seletor aberto. Conecte sua chave para ativar o Zion Frame.', 'success');
+      } else {
+        showToast('O sistema de conexão não está disponível neste navegador.', 'error');
       }
-      
-      await window.aistudio.openSelectKey();
-      
-      // Conforme as regras, assumimos sucesso após o trigger do diálogo
-      // para evitar race conditions onde hasSelectedApiKey ainda retorna false
-      setHasKey(true);
-      showToast('Conexão iniciada! Verifique o popup do Google.', 'success');
     } catch (e) {
-      console.error("Erro no seletor:", e);
-      showToast('Erro ao abrir seletor de chaves.', 'error');
+      console.error("Erro ao abrir seletor:", e);
+      showToast('Não foi possível abrir o seletor de chaves.', 'error');
     }
   };
 
@@ -115,16 +130,29 @@ function App() {
       });
 
       setGenerationState('COMPLETE');
-      showToast(`Arte gerada com sua cota pessoal.`, 'success');
+      showToast(`Arte gerada com sucesso.`, 'success');
     } catch (error: any) {
-      showToast(error.message || 'Erro na geração.', 'error');
+      let msg = error.message || 'Erro inesperado na geração.';
+      // Reset key selection if the request fails with "Requested entity was not found."
+      if (msg.includes("Requested entity was not found")) {
+        msg = "Chave de API não encontrada ou inválida. Reconecte sua conta.";
+        setHasKey(false);
+      }
+      showToast(msg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
     }
   }, [prompt, settings, showToast]);
 
-  if (hasKey === null) return <div className="fixed inset-0 bg-black"></div>;
+  // Enquanto verifica o estado inicial, mantém uma tela neutra
+  if (hasKey === null) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/10 border-t-[#a3ff12] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!hasKey) {
     return (
@@ -142,12 +170,12 @@ function App() {
           </h1>
           
           <p className="text-neutral-400 text-sm mb-10 leading-relaxed font-medium">
-            Conecte sua conta do Google AI Studio para começar. Você usará sua própria cota gratuita de geração, garantindo que o Zion Frame permaneça livre para todos.
+            O Zion Frame requer que você conecte sua própria chave do Google AI Studio. Isso garante que cada usuário use sua própria cota gratuita de forma independente.
           </p>
 
           <button 
             onClick={handleConnectKey}
-            className="w-full bg-[#a3ff12] hover:bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-[0_20px_40px_rgba(163,255,18,0.2)] hover:shadow-[0_0_50px_rgba(163,255,18,0.4)]"
+            className="w-full bg-[#a3ff12] hover:bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-[0_20px_40px_rgba(163,255,18,0.2)] hover:shadow-[0_0_50px_rgba(163,255,18,0.4)] pointer-events-auto"
           >
             Conectar minha API Key
           </button>
@@ -158,14 +186,14 @@ function App() {
               target="_blank" 
               className="text-[10px] text-[#a3ff12] uppercase font-bold tracking-widest hover:underline"
             >
-              Não tenho uma chave? Criar agora no AI Studio →
+              Não tenho uma chave? Criar no AI Studio →
             </a>
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
               className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest hover:text-white transition-colors"
             >
-              Documentação de Cotas e Faturamento
+              Sobre cotas e faturamento do Google
             </a>
           </div>
         </div>
