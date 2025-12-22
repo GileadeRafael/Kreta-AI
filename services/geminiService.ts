@@ -7,11 +7,13 @@ export const generateImage = async (
     numImages: number,
     quality: Settings['quality']
 ): Promise<string[]> => {
-    // Instanciação dinâmica: garante que use a chave selecionada pelo usuário no momento
+    // CRÍTICO: Instanciar apenas aqui dentro. Se process.env.API_KEY estiver vazio aqui, 
+    // significa que o diálogo do AI Studio não foi concluído ou falhou.
+    if (!process.env.API_KEY) {
+        throw new Error("Chave de API não detectada. Por favor, reconecte sua conta.");
+    }
+
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    // Define o modelo baseado na qualidade escolhida pelo usuário
-    // Ambos usam a cota do usuário
     const modelName = quality === 'Standard' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
 
     const generateSingle = async (): Promise<string | null> => {
@@ -38,34 +40,30 @@ export const generateImage = async (
             return null;
         } catch (error: any) {
             console.error(`Erro na geração (${modelName}):`, error);
-            
             if (error.message?.includes("Requested entity was not found")) {
-                throw new Error("Sua chave de API parece inválida ou o projeto não tem faturamento/cota ativada.");
+                throw new Error("Projeto inválido ou sem cota. Verifique seu Google AI Studio.");
             }
             if (error.message?.includes("quota") || error.message?.includes("429")) {
-                throw new Error("Sua cota pessoal no Google AI Studio foi atingida. Tente novamente em alguns minutos.");
+                throw new Error("Cota pessoal atingida. O Google renova sua cota gratuita periodicamente.");
             }
-            
             throw error;
         }
     };
 
-    try {
-        const promises = Array.from({ length: numImages }).map(() => generateSingle());
-        const results = await Promise.all(promises);
-        const images = results.filter((img): img is string => img !== null);
+    const promises = Array.from({ length: numImages }).map(() => generateSingle());
+    const results = await Promise.all(promises);
+    const images = results.filter((img): img is string => img !== null);
 
-        if (images.length === 0) {
-            throw new Error("A IA não retornou resultados. Tente ajustar seu prompt.");
-        }
-
-        return images;
-    } catch (error: any) {
-        throw error;
+    if (images.length === 0) {
+        throw new Error("Não foi possível gerar imagens com o prompt atual.");
     }
+
+    return images;
 };
 
 export const generateTitle = async (prompt: string): Promise<string> => {
+    if (!process.env.API_KEY) return "Visão Infinita";
+    
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({

@@ -22,12 +22,23 @@ function App() {
   const [generationState, setGenerationState] = useState<GenerationState>('IDLE');
   const [toast, setToast] = useState<ToastInfo | null>(null);
 
+  const showToast = useCallback((message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  }, []);
+
   useEffect(() => {
     const checkKey = async () => {
       try {
-        const selected = await (window as any).aistudio.hasSelectedApiKey();
-        setHasKey(selected);
+        if (window.aistudio) {
+          const selected = await window.aistudio.hasSelectedApiKey();
+          setHasKey(selected);
+        } else {
+          // Fallback caso o objeto demore a injetar
+          setHasKey(false);
+        }
       } catch (e) {
+        console.error("Erro ao verificar chave:", e);
         setHasKey(false);
       }
     };
@@ -36,20 +47,23 @@ function App() {
 
   const handleConnectKey = async () => {
     try {
-      await (window as any).aistudio.openSelectKey();
-      // Assume sucesso imediato para evitar race conditions do SDK
+      if (!window.aistudio) {
+        showToast('Sistema de autenticação não carregado. Recarregue a página.', 'error');
+        return;
+      }
+      
+      await window.aistudio.openSelectKey();
+      
+      // Conforme as regras, assumimos sucesso após o trigger do diálogo
+      // para evitar race conditions onde hasSelectedApiKey ainda retorna false
       setHasKey(true);
-      showToast('Conexão estabelecida com sucesso!', 'success');
+      showToast('Conexão iniciada! Verifique o popup do Google.', 'success');
     } catch (e) {
-      showToast('Falha ao conectar chave de API.', 'error');
+      console.error("Erro no seletor:", e);
+      showToast('Erro ao abrir seletor de chaves.', 'error');
     }
   };
 
-  const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
-  }, []);
-  
   const handleClearCanvas = useCallback(() => {
     setGeneratedImages([]);
     showToast('Canvas limpo com sucesso.', 'success');
@@ -110,33 +124,30 @@ function App() {
     }
   }, [prompt, settings, showToast]);
 
-  // Enquanto verifica a chave, tela preta
   if (hasKey === null) return <div className="fixed inset-0 bg-black"></div>;
 
-  // Se não tem chave, mostra a tela de boas-vindas/conexão
   if (!hasKey) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black p-6">
+      <div className="fixed inset-0 flex items-center justify-center bg-black p-6 z-[100]">
         <div className="dot-grid opacity-20"></div>
-        <div className="relative glass-card p-12 rounded-[3.5rem] border-white/10 max-w-lg text-center animate-scale-in overflow-hidden">
-          {/* Decorative Glow */}
+        <div className="relative glass-card p-12 rounded-[3.5rem] border-white/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_100px_rgba(163,255,18,0.1)]">
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#a3ff12]/20 blur-[80px]"></div>
           
-          <div className="w-24 h-24 bg-[#a3ff12]/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-[#a3ff12]/20">
+          <div className="w-24 h-24 bg-[#a3ff12]/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-[#a3ff12]/20 shadow-[0_0_30px_rgba(163,255,18,0.1)]">
             <KeyIcon className="w-12 h-12 text-[#a3ff12]" />
           </div>
 
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
-            Alimente sua <br/><span className="text-[#a3ff12]">Criatividade</span>
+            Visão <br/><span className="text-[#a3ff12]">Zion Frame</span>
           </h1>
           
           <p className="text-neutral-400 text-sm mb-10 leading-relaxed font-medium">
-            O Zion Frame é uma interface de alta performance que utiliza sua própria chave do Google AI Studio. Isso garante privacidade total e que você use sua cota gratuita (ou paga) como preferir.
+            Conecte sua conta do Google AI Studio para começar. Você usará sua própria cota gratuita de geração, garantindo que o Zion Frame permaneça livre para todos.
           </p>
 
           <button 
             onClick={handleConnectKey}
-            className="w-full bg-[#a3ff12] hover:bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-[0_20px_40px_rgba(163,255,18,0.2)]"
+            className="w-full bg-[#a3ff12] hover:bg-white text-black font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-[0_20px_40px_rgba(163,255,18,0.2)] hover:shadow-[0_0_50px_rgba(163,255,18,0.4)]"
           >
             Conectar minha API Key
           </button>
@@ -147,14 +158,14 @@ function App() {
               target="_blank" 
               className="text-[10px] text-[#a3ff12] uppercase font-bold tracking-widest hover:underline"
             >
-              Não tenho uma chave? Criar agora →
+              Não tenho uma chave? Criar agora no AI Studio →
             </a>
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
               className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest hover:text-white transition-colors"
             >
-              Sobre faturamento e cotas gratuitas
+              Documentação de Cotas e Faturamento
             </a>
           </div>
         </div>
