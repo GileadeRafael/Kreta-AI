@@ -5,14 +5,14 @@ export const generateImage = async (
     prompt: string, 
     aspectRatio: Settings['aspectRatio'], 
     numImages: number,
-    isProMode: boolean = false
+    quality: Settings['quality']
 ): Promise<string[]> => {
-    // Se o usuário não estiver no modo Pro, usamos a chave de ambiente injetada (process.env.API_KEY)
-    // Se estiver no modo Pro, o SDK usará a chave selecionada no diálogo do AI Studio
+    // Instanciação dinâmica: garante que use a chave selecionada pelo usuário no momento
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Decidimos o modelo com base no modo
-    const modelName = isProMode ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+    // Define o modelo baseado na qualidade escolhida pelo usuário
+    // Ambos usam a cota do usuário
+    const modelName = quality === 'Standard' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
 
     const generateSingle = async (): Promise<string | null> => {
         try {
@@ -24,7 +24,7 @@ export const generateImage = async (
                 config: {
                     imageConfig: {
                         aspectRatio: aspectRatio,
-                        ...(isProMode && { imageSize: "1K" })
+                        ...(modelName === 'gemini-3-pro-image-preview' && { imageSize: "1K" })
                     }
                 },
             });
@@ -37,19 +37,16 @@ export const generateImage = async (
             }
             return null;
         } catch (error: any) {
-            console.error(`Erro no modelo ${modelName}:`, error);
+            console.error(`Erro na geração (${modelName}):`, error);
             
-            // Tratamento específico para quando a chave do sistema atinge limite
+            if (error.message?.includes("Requested entity was not found")) {
+                throw new Error("Sua chave de API parece inválida ou o projeto não tem faturamento/cota ativada.");
+            }
             if (error.message?.includes("quota") || error.message?.includes("429")) {
-                throw new Error("LIMITE_SISTEMA");
+                throw new Error("Sua cota pessoal no Google AI Studio foi atingida. Tente novamente em alguns minutos.");
             }
             
-            // Se o modo Pro falhar por falta de chave selecionada
-            if (isProMode && error.message?.includes("API key")) {
-                throw new Error("PRO_KEY_REQUIRED");
-            }
-
-            return null;
+            throw error;
         }
     };
 
@@ -59,7 +56,7 @@ export const generateImage = async (
         const images = results.filter((img): img is string => img !== null);
 
         if (images.length === 0) {
-            throw new Error("A IA não conseguiu processar sua visão no momento. Tente um prompt diferente.");
+            throw new Error("A IA não retornou resultados. Tente ajustar seu prompt.");
         }
 
         return images;
