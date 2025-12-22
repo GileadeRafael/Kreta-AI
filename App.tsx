@@ -4,10 +4,9 @@ import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
 import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
-import { KeyIcon } from './components/icons/KeyIcon';
 
 function App() {
-  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  const [isProMode, setIsProMode] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [prompt, setPrompt] = useState<string>('');
   const [settings, setSettings] = useState<Settings>({
@@ -23,20 +22,6 @@ function App() {
   const [toast, setToast] = useState<ToastInfo | null>(null);
   const imageSpawnCounter = useRef(0);
 
-  useEffect(() => {
-    const checkKey = async () => {
-      const selected = await (window as any).aistudio.hasSelectedApiKey();
-      setHasKey(selected);
-    };
-    checkKey();
-  }, []);
-
-  const handleOpenKeySelector = async () => {
-    await (window as any).aistudio.openSelectKey();
-    // Assume sucesso conforme diretrizes para evitar race conditions
-    setHasKey(true);
-  };
-
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
@@ -47,6 +32,28 @@ function App() {
     imageSpawnCounter.current = 0;
     showToast('Canvas limpo com sucesso.', 'success');
   }, [showToast]);
+
+  const handleTogglePro = async (active: boolean) => {
+    if (active) {
+      const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+      if (!hasKey) {
+        try {
+          await (window as any).aistudio.openSelectKey();
+          setIsProMode(true);
+          showToast('Zion Pro: Motor de Alta Fidelidade Ativado', 'success');
+        } catch (e) {
+          setIsProMode(false);
+          showToast('Seleção de chave cancelada.', 'error');
+        }
+      } else {
+        setIsProMode(true);
+        showToast('Zion Pro Ativado', 'success');
+      }
+    } else {
+      setIsProMode(false);
+      showToast('Retornando ao Modo Standard (Grátis)', 'success');
+    }
+  };
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
@@ -74,7 +81,7 @@ function App() {
     setGeneratedImages(prev => [...prev, ...placeholders]);
 
     try {
-      const images = await generateImage(activePrompt, settings.aspectRatio, settings.numImages);
+      const images = await generateImage(activePrompt, settings.aspectRatio, settings.numImages, isProMode);
       const title = await generateTitle(activePrompt);
       
       setGeneratedImages(prevImages => {
@@ -94,50 +101,33 @@ function App() {
       });
 
       setGenerationState('COMPLETE');
-      showToast(`Imagens geradas com sucesso.`, 'success');
+      showToast(`Arte gerada via ${isProMode ? 'Pro Engine' : 'Standard Engine'}.`, 'success');
     } catch (error: any) {
-      if (error.message === "KEY_RESET_REQUIRED") {
-        setHasKey(false);
-        showToast('Chave de API expirada ou inválida. Por favor, reconecte.', 'error');
+      let errorMsg = 'Falha na conexão orbital.';
+      
+      if (error.message === "LIMITE_SISTEMA") {
+        errorMsg = 'Limite de uso gratuito atingido. Tente novamente mais tarde ou ative o Modo Pro.';
+      } else if (error.message === "PRO_KEY_REQUIRED") {
+        errorMsg = 'O modo Pro requer uma chave faturável. Retornando ao Standard.';
+        setIsProMode(false);
       } else {
-        showToast(error.message || 'Falha na conexão.', 'error');
+        errorMsg = error.message || errorMsg;
       }
+
+      showToast(errorMsg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
     }
-  }, [prompt, settings, showToast]);
-
-  if (hasKey === null) return null; // Loading inicial
-
-  if (!hasKey) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="text-center p-8 glass-card rounded-[3rem] border-[#a3ff12]/20 max-w-md animate-scale-in">
-          <div className="w-20 h-20 bg-[#a3ff12]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <KeyIcon className="w-10 h-10 text-[#a3ff12]" />
-          </div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Acesso Restrito</h1>
-          <p className="text-neutral-400 text-sm mb-8 leading-relaxed">
-            Para utilizar o modelo Pro do Zion Frame, você precisa conectar sua própria chave de API faturável do Google AI Studio.
-          </p>
-          <button 
-            onClick={handleOpenKeySelector}
-            className="w-full bg-[#a3ff12] text-black font-black py-4 rounded-2xl uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(163,255,18,0.3)]"
-          >
-            Conectar Google AI Studio
-          </button>
-          <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-[10px] text-neutral-600 block mt-6 uppercase hover:text-white transition-colors">
-            Documentação de Faturamento
-          </a>
-        </div>
-      </div>
-    );
-  }
+  }, [prompt, settings, isProMode, showToast]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-transparent overflow-hidden text-white">
-        <Header onClearCanvas={handleClearCanvas} />
+        <Header 
+            onClearCanvas={handleClearCanvas} 
+            isProMode={isProMode} 
+            onTogglePro={handleTogglePro} 
+        />
         <main className="flex-1 relative z-10">
             <Generator
               prompt={prompt}

@@ -1,21 +1,30 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
-export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
-    // Sempre cria uma nova instância para garantir o uso da chave mais recente selecionada no dialog
+export const generateImage = async (
+    prompt: string, 
+    aspectRatio: Settings['aspectRatio'], 
+    numImages: number,
+    isProMode: boolean = false
+): Promise<string[]> => {
+    // Se o usuário não estiver no modo Pro, usamos a chave de ambiente injetada (process.env.API_KEY)
+    // Se estiver no modo Pro, o SDK usará a chave selecionada no diálogo do AI Studio
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
+    // Decidimos o modelo com base no modo
+    const modelName = isProMode ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+
     const generateSingle = async (): Promise<string | null> => {
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-3-pro-image-preview',
+                model: modelName,
                 contents: {
                     parts: [{ text: prompt }]
                 },
                 config: {
                     imageConfig: {
                         aspectRatio: aspectRatio,
-                        imageSize: "1K" // Qualidade padrão para o modelo Pro
+                        ...(isProMode && { imageSize: "1K" })
                     }
                 },
             });
@@ -28,11 +37,18 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
             }
             return null;
         } catch (error: any) {
-            console.error("Erro na geração individual:", error);
-            // Se o erro for "Entity not found", pode ser um problema com a chave/projeto selecionado
-            if (error.message?.includes("Requested entity was not found")) {
-                throw new Error("KEY_RESET_REQUIRED");
+            console.error(`Erro no modelo ${modelName}:`, error);
+            
+            // Tratamento específico para quando a chave do sistema atinge limite
+            if (error.message?.includes("quota") || error.message?.includes("429")) {
+                throw new Error("LIMITE_SISTEMA");
             }
+            
+            // Se o modo Pro falhar por falta de chave selecionada
+            if (isProMode && error.message?.includes("API key")) {
+                throw new Error("PRO_KEY_REQUIRED");
+            }
+
             return null;
         }
     };
@@ -43,13 +59,11 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
         const images = results.filter((img): img is string => img !== null);
 
         if (images.length === 0) {
-            throw new Error("A visão cósmica não retornou resultados. Verifique seu prompt ou conexão.");
+            throw new Error("A IA não conseguiu processar sua visão no momento. Tente um prompt diferente.");
         }
 
         return images;
     } catch (error: any) {
-        if (error.message === "KEY_RESET_REQUIRED") throw error;
-        console.error("Erro na Geração Coletiva:", error);
         throw error;
     }
 };
