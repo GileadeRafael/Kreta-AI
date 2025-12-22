@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
@@ -39,14 +40,14 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
             style={{ 
                 transform: `translate3d(${x}px, ${y}px, 0)`,
                 width: '320px',
-                borderColor: isLoading ? 'rgba(163, 255, 18, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-                boxShadow: isLoading ? '0 0 40px rgba(163, 255, 18, 0.1)' : '0 20px 50px rgba(0,0,0,0.4)',
+                borderColor: isLoading ? 'rgba(163, 255, 18, 0.4)' : 'rgba(163, 255, 18, 0.1)',
+                boxShadow: isLoading ? '0 0 50px rgba(163, 255, 18, 0.15)' : '0 30px 60px rgba(0,0,0,0.6)',
                 willChange: 'transform'
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
             {!isLoading && (
-                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5 pointer-events-none select-none">
+                <div className="px-4 py-3 bg-white/[0.02] border-b border-primary/5 pointer-events-none select-none">
                     <h3 className="text-neutral-300 text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 truncate leading-tight">
                         {title}
                     </h3>
@@ -58,27 +59,27 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
 
             <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative bg-black/40`}>
                 {isLoading ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#a3ff12]/5 via-secondary/5 to-[#a3ff12]/5 animate-pulse flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#a3ff12]/5 via-transparent to-[#a3ff12]/5 animate-pulse flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
                              <div className="w-8 h-8 border-2 border-[#a3ff12]/10 border-t-[#a3ff12] rounded-full animate-spin"></div>
-                             <span className="text-[8px] font-black tracking-[0.3em] text-[#a3ff12]/80 uppercase">Gerando</span>
+                             <span className="text-[8px] font-black tracking-[0.3em] text-[#a3ff12]/80 uppercase">Manifestando</span>
                         </div>
                     </div>
                 ) : (
-                    <img src={src} alt={prompt} className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-1000 group-hover:scale-105" />
+                    <img src={src} alt={prompt} className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-1000 group-hover:scale-110" />
                 )}
                 
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
                     <button 
                         onClick={handleDownload} 
-                        className="p-3 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-secondary transition-all hover:scale-110 border border-white/10 shadow-lg"
+                        className="p-3 bg-black/80 backdrop-blur-xl rounded-xl text-white hover:bg-white hover:text-black transition-all hover:scale-110 border border-white/10 shadow-lg"
                         title="Download"
                     >
                         <DownloadIcon className="w-5 h-5"/>
                     </button>
                     <button 
                         onClick={onZoomClick} 
-                        className="p-3 bg-black/60 backdrop-blur-xl rounded-xl text-white hover:bg-[#a3ff12] hover:text-black transition-all hover:scale-110 border border-white/10 shadow-lg"
+                        className="p-3 bg-black/80 backdrop-blur-xl rounded-xl text-primary hover:bg-primary hover:text-black transition-all hover:scale-110 border border-primary/20 shadow-lg"
                         title="Expandir"
                     >
                         <ZoomInIcon className="w-5 h-5"/>
@@ -87,9 +88,9 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
             </div>
 
             {!isLoading && (
-                <div className="px-4 py-1.5 flex justify-between items-center bg-black/20 pointer-events-none select-none">
-                     <span className="text-[7px] font-bold text-neutral-600 uppercase tracking-widest">{aspectRatio} FRAME</span>
-                     <div className="w-1 h-1 rounded-full bg-[#a3ff12]/30 animate-pulse"></div>
+                <div className="px-4 py-2 flex justify-between items-center bg-black/20 pointer-events-none select-none border-t border-primary/5">
+                     <span className="text-[7px] font-bold text-neutral-600 uppercase tracking-widest">{aspectRatio} ZION GRID</span>
+                     <div className="w-1 h-1 rounded-full bg-[#a3ff12] animate-pulse shadow-[0_0_5px_#a3ff12]"></div>
                 </div>
             )}
         </div>

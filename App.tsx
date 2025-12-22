@@ -7,14 +7,12 @@ import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 import { KeyIcon } from './components/icons/KeyIcon';
 
-// Declare aistudio globally following guidelines
 declare global {
   interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
     openSelectKey: () => Promise<void>;
   }
   interface Window {
-    // Fix: All declarations of 'aistudio' must have identical modifiers. Adding '?' to match environment.
     aistudio?: AIStudio;
   }
 }
@@ -40,15 +38,20 @@ function App() {
     setTimeout(() => setToast(null), 5000);
   }, []);
 
-  // Use only aistudio.hasSelectedApiKey for key checking as per guidelines
   useEffect(() => {
     const checkKey = async () => {
+      // Prioridade 1: Chave injetada via Env Var (Vercel)
+      if (process.env.API_KEY && process.env.API_KEY !== "") {
+        setHasKey(true);
+        return;
+      }
+
+      // Prioridade 2: Ambiente AI Studio
       if (window.aistudio) {
         try {
           const selected = await window.aistudio.hasSelectedApiKey();
           setHasKey(selected);
         } catch (e) {
-          console.warn("AI Studio Key check failed", e);
           setHasKey(false);
         }
       } else {
@@ -56,32 +59,32 @@ function App() {
       }
     };
     
-    const timer = setTimeout(checkKey, 500);
-    return () => clearTimeout(timer);
+    checkKey();
   }, []);
 
   const handleConnectKey = async () => {
     if (window.aistudio) {
       try {
         await window.aistudio.openSelectKey();
-        // GUIDELINE: Assume the key selection was successful after triggering openSelectKey() and proceed to the app.
         setHasKey(true);
-        showToast('Conectado à Zion Grid.', 'success');
+        showToast('Engine Zion Sincronizada.', 'success');
       } catch (e) {
-        showToast('Erro ao abrir seletor de chave.', 'error');
+        showToast('Falha ao conectar chave.', 'error');
       }
+    } else {
+      showToast('Por favor, configure API_KEY no seu ambiente Vercel.', 'error');
     }
   };
 
   const handleClearCanvas = useCallback(() => {
     setGeneratedImages([]);
-    showToast('Canvas resetado.', 'success');
+    showToast('Grid Zion resetado.', 'success');
   }, [showToast]);
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
     if (!activePrompt.trim()) {
-      showToast('O que devemos criar hoje?', 'error');
+      showToast('Defina sua visão para começar.', 'error');
       return;
     }
 
@@ -89,7 +92,7 @@ function App() {
     const placeholders: GeneratedImage[] = Array.from({ length: settings.numImages }).map((_, index) => ({
       id: crypto.randomUUID(),
       src: '',
-      title: 'Materializando...',
+      title: 'Decodificando...',
       prompt: activePrompt,
       aspectRatio: settings.aspectRatio,
       x: window.innerWidth / 2 - 160 + (index * 40),
@@ -121,10 +124,9 @@ function App() {
 
       setGenerationState('COMPLETE');
     } catch (error: any) {
-      let msg = error.message || 'Erro na transmissão de dados.';
-      // GUIDELINE: If the request fails with "Requested entity was not found.", reset key state
+      let msg = error.message || 'Erro na transmissão Zion.';
       if (msg.includes("Requested entity was not found")) {
-        msg = "Sessão expirada. Por favor, selecione sua chave novamente.";
+        msg = "Chave inválida. Reconecte seu acesso.";
         setHasKey(false);
       }
       showToast(msg, 'error');
@@ -136,53 +138,43 @@ function App() {
 
   if (hasKey === null) {
     return <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <div className="w-12 h-12 border-2 border-white/5 border-t-primary rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
     </div>;
   }
 
   if (!hasKey) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black p-6 z-[100]">
-        <div className="dot-grid opacity-30"></div>
-        <div className="relative glass-card p-12 rounded-[3.5rem] border-white/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_120px_rgba(163,255,18,0.15)]">
+        <div className="dot-grid opacity-40"></div>
+        <div className="relative glass-card p-12 rounded-[3.5rem] border-primary/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_100px_rgba(163,255,18,0.1)]">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px]"></div>
-          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-secondary/10 blur-[100px]"></div>
           
-          <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl flex items-center justify-center mx-auto mb-10 border border-white/10 shadow-2xl">
+          <div className="w-24 h-24 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-10 border border-primary/20 shadow-inner">
             <KeyIcon className="w-12 h-12 text-primary" />
           </div>
 
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
-            Ative o <br/><span className="futuristic-gradient-text">Zion Frame</span>
+            Zion Frame <br/><span className="text-primary">System Access</span>
           </h1>
           
           <p className="text-neutral-400 text-sm mb-12 leading-relaxed font-medium">
-            Para iniciar a geração, conecte sua chave de acesso paga do Google AI Studio.
+            Conecte sua chave do Google AI Studio ou configure a variável <code className="text-primary bg-primary/5 px-2 py-1 rounded">API_KEY</code> no Vercel para liberar a engine de geração.
           </p>
 
           <button 
             onClick={handleConnectKey}
-            className="w-full bg-primary hover:bg-white text-black font-black py-6 rounded-2xl uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-[0_20px_50px_rgba(163,255,18,0.3)] hover:shadow-[0_0_60px_rgba(163,255,18,0.5)] cursor-pointer relative z-50"
+            className="w-full bg-primary hover:bg-white text-black font-black py-6 rounded-2xl uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-[0_20px_50px_rgba(163,255,18,0.2)] hover:shadow-[0_0_60px_rgba(163,255,18,0.4)] cursor-pointer relative z-50"
           >
-            Conectar Zion Key
+            Sincronizar Acesso
           </button>
 
           <div className="mt-10 flex flex-col gap-4">
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
-              rel="noopener noreferrer"
               className="text-[10px] text-primary uppercase font-black tracking-widest hover:underline"
             >
-              Configurar Faturamento (ai.google.dev/gemini-api/docs/billing) →
-            </a>
-            <a 
-              href="https://aistudio.google.com/app/apikey" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[10px] text-neutral-500 uppercase font-black tracking-widest hover:text-white"
-            >
-              Obter chave no AI Studio →
+              Configurar Faturamento →
             </a>
           </div>
         </div>
