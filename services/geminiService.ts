@@ -1,20 +1,29 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Settings } from '../types';
 
-export const generateImage = async (prompt: string, aspectRatio: Settings['aspectRatio'], numImages: number): Promise<string[]> => {
+export const generateImage = async (
+    prompt: string, 
+    aspectRatio: Settings['aspectRatio'], 
+    numImages: number,
+    isProMode: boolean
+): Promise<string[]> => {
+    // Se estiver no Pro Mode, assume que a chave vem do seletor do AI Studio (injetada no process.env.API_KEY)
+    // Se não, usa a chave padrão do desenvolvedor
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Função interna para uma única geração
+    const modelName = isProMode ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+
     const generateSingle = async (): Promise<string | null> => {
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
+                model: modelName,
                 contents: {
                     parts: [{ text: prompt }]
                 },
                 config: {
                     imageConfig: {
-                        aspectRatio: aspectRatio
+                        aspectRatio: aspectRatio,
+                        ...(isProMode && { imageSize: "1K" })
                     }
                 },
             });
@@ -26,27 +35,30 @@ export const generateImage = async (prompt: string, aspectRatio: Settings['aspec
                 }
             }
             return null;
-        } catch (error) {
-            console.error("Erro em uma das gerações:", error);
+        } catch (error: any) {
+            console.error(`Erro no modelo ${modelName}:`, error);
+            
+            if (error.message?.includes("Requested entity was not found")) {
+                throw new Error("PRO_KEY_REQUIRED");
+            }
+            if (error.message?.includes("429") || error.message?.includes("quota")) {
+                throw new Error("QUOTA_EXCEEDED");
+            }
             return null;
         }
     };
 
     try {
-        // Executa múltiplas gerações em paralelo de acordo com numImages
         const promises = Array.from({ length: numImages }).map(() => generateSingle());
         const results = await Promise.all(promises);
-        
-        // Filtra resultados nulos (falhas individuais)
         const images = results.filter((img): img is string => img !== null);
 
         if (images.length === 0) {
-            throw new Error("A visão cósmica não retornou nenhuma imagem.");
+            throw new Error("A IA não conseguiu processar sua visão no momento. Tente um prompt diferente.");
         }
 
         return images;
     } catch (error: any) {
-        console.error("Erro na Geração Coletiva (Gemini):", error);
         throw error;
     }
 };
@@ -56,7 +68,7 @@ export const generateTitle = async (prompt: string): Promise<string> => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview', 
-            contents: `Como um curador de arte IA, crie um título poético e minimalista (máximo 3 palavras) para esta imagem: "${prompt}". Retorne apenas o texto do título.`,
+            contents: `Crie um título poético (3 palavras max) para: "${prompt}". Retorne apenas o texto.`,
         });
         return response.text?.trim() || "Visão Infinita";
     } catch (error) {

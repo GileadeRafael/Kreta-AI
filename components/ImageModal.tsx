@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { GeneratedImage } from '../types';
 import { XIcon } from './icons/XIcon';
@@ -67,7 +68,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                             </button>
                         </div>
 
-                        {/* Updated Title Style: No italic, no black weight */}
+                        {/* Title Style */}
                         <h2 className="text-4xl font-medium text-white mb-2 leading-[0.9] uppercase tracking-tighter">
                             {image.title}
                         </h2>
@@ -91,7 +92,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                                 </div>
                                 <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
                                     <span className="text-[7px] font-black text-neutral-600 uppercase tracking-widest block mb-1">Modelo Gen</span>
-                                    <span className="text-white text-xs font-bold uppercase tracking-tight">Gemini 2.5</span>
+                                    <span className="text-white text-xs font-bold uppercase tracking-tight">Gemini 3 Pro</span>
                                 </div>
                                 <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
                                     <span className="text-[7px] font-black text-neutral-600 uppercase tracking-widest block mb-1">Processo</span>
@@ -102,7 +103,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ image, onClose }) => {
                     </div>
 
                     <div className="pt-10">
-                        {/* Updated Button Text */}
+                        {/* Download Button */}
                         <button 
                             onClick={handleDownload} 
                             className="w-full group relative overflow-hidden flex items-center justify-center gap-3 rounded-2xl text-xs font-black transition-all duration-500 text-black bg-[#a3ff12] hover:bg-white px-6 py-5 transform active:scale-95 shadow-[0_15px_30px_rgba(163,255,18,0.2)]"

@@ -45,13 +45,12 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
             }}
             onMouseDown={isLoading ? undefined : onDragStart}
         >
-            {/* Header Info - Always Visible */}
             {!isLoading && (
                 <div className="px-4 py-3 bg-white/[0.02] border-b border-white/5 pointer-events-none select-none">
                     <h3 className="text-neutral-300 text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 truncate leading-tight">
                         {title}
                     </h3>
-                    <p className="text-neutral-500 text-[9px] font-medium italic truncate opacity-70">
+                    <p className="text-neutral-500 text-[9px] font-medium truncate opacity-70">
                         "{prompt}"
                     </p>
                 </div>
@@ -69,7 +68,6 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
                     <img src={src} alt={prompt} className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-1000 group-hover:scale-105" />
                 )}
                 
-                {/* Overlay for actions only */}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                     <button 
                         onClick={handleDownload} 
@@ -88,7 +86,6 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
                 </div>
             </div>
 
-            {/* Subtle Footer Tag */}
             {!isLoading && (
                 <div className="px-4 py-1.5 flex justify-between items-center bg-black/20 pointer-events-none select-none">
                      <span className="text-[7px] font-bold text-neutral-600 uppercase tracking-widest">{aspectRatio} FRAME</span>
