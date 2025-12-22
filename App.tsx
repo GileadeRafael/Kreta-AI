@@ -41,7 +41,9 @@ function App() {
   useEffect(() => {
     const checkKey = async () => {
       // Prioridade 1: Chave injetada via Env Var (Vercel)
-      if (process.env.API_KEY && process.env.API_KEY !== "") {
+      // Nota: process.env.API_KEY é injetado pelo ambiente de build/runtime
+      const envKey = process.env.API_KEY;
+      if (envKey && envKey !== "undefined" && envKey !== "") {
         setHasKey(true);
         return;
       }
@@ -55,6 +57,7 @@ function App() {
           setHasKey(false);
         }
       } else {
+        // Se não houver process.env e não estiver no AI Studio, assumimos que falta chave
         setHasKey(false);
       }
     };
@@ -69,10 +72,11 @@ function App() {
         setHasKey(true);
         showToast('Engine Zion Sincronizada.', 'success');
       } catch (e) {
-        showToast('Falha ao conectar chave.', 'error');
+        showToast('Falha ao conectar chave via AI Studio.', 'error');
       }
     } else {
-      showToast('Por favor, configure API_KEY no seu ambiente Vercel.', 'error');
+      // No Vercel, o botão explica o procedimento
+      showToast('No Vercel, configure a variável API_KEY nas configurações do seu projeto.', 'error');
     }
   };
 
@@ -126,7 +130,7 @@ function App() {
     } catch (error: any) {
       let msg = error.message || 'Erro na transmissão Zion.';
       if (msg.includes("Requested entity was not found")) {
-        msg = "Chave inválida. Reconecte seu acesso.";
+        msg = "Chave inválida. Reconecte seu acesso no Google AI Studio ou verifique suas env vars.";
         setHasKey(false);
       }
       showToast(msg, 'error');
@@ -137,16 +141,18 @@ function App() {
   }, [prompt, settings, showToast]);
 
   if (hasKey === null) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-    </div>;
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (!hasKey) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black p-6 z-[100]">
         <div className="dot-grid opacity-40"></div>
-        <div className="relative glass-card p-12 rounded-[3.5rem] border-primary/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_100px_rgba(163,255,18,0.1)]">
+        <div className="relative glass-card p-12 rounded-[3.5rem] border-primary/10 max-w-lg text-center animate-scale-in overflow-hidden shadow-[0_0_100px_rgba(163,255,18,0.15)]">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px]"></div>
           
           <div className="w-24 h-24 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-10 border border-primary/20 shadow-inner">
@@ -154,18 +160,18 @@ function App() {
           </div>
 
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
-            Zion Frame <br/><span className="text-primary">System Access</span>
+            Zion Frame <br/><span className="text-primary">System Lock</span>
           </h1>
           
           <p className="text-neutral-400 text-sm mb-12 leading-relaxed font-medium">
-            Conecte sua chave do Google AI Studio ou configure a variável <code className="text-primary bg-primary/5 px-2 py-1 rounded">API_KEY</code> no Vercel para liberar a engine de geração.
+            A engine está offline. No <strong>Vercel</strong>, adicione <code>API_KEY</code> nas Environment Variables. No <strong>AI Studio</strong>, use o botão abaixo.
           </p>
 
           <button 
             onClick={handleConnectKey}
             className="w-full bg-primary hover:bg-white text-black font-black py-6 rounded-2xl uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-[0_20px_50px_rgba(163,255,18,0.2)] hover:shadow-[0_0_60px_rgba(163,255,18,0.4)] cursor-pointer relative z-50"
           >
-            Sincronizar Acesso
+            Sincronizar Zion Engine
           </button>
 
           <div className="mt-10 flex flex-col gap-4">
@@ -174,10 +180,11 @@ function App() {
               target="_blank" 
               className="text-[10px] text-primary uppercase font-black tracking-widest hover:underline"
             >
-              Configurar Faturamento →
+              Documentação de Faturamento →
             </a>
           </div>
         </div>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     );
   }
