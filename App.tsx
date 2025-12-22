@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
@@ -7,15 +7,14 @@ import { generateImage, generateTitle } from './services/geminiService';
 import type { Settings, GenerationState, ToastInfo, GeneratedImage } from './types';
 import { KeyIcon } from './components/icons/KeyIcon';
 
-// Define the global AIStudio interface to avoid conflicts and resolve TS errors
-interface AIStudio {
-  hasSelectedApiKey: () => Promise<boolean>;
-  openSelectKey: () => Promise<void>;
-}
-
+// Declare aistudio globally to match the pre-configured environment
 declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
   interface Window {
-    readonly aistudio: AIStudio;
+    aistudio: AIStudio;
   }
 }
 
@@ -40,72 +39,67 @@ function App() {
     setTimeout(() => setToast(null), 5000);
   }, []);
 
+  // Verifica o estado da chave no carregamento
   useEffect(() => {
-    const checkKey = async () => {
+    const checkKeyStatus = async () => {
       try {
-        // Tenta verificar se já existe uma chave selecionada
-        if (typeof window.aistudio !== 'undefined') {
+        if (window.aistudio) {
           const selected = await window.aistudio.hasSelectedApiKey();
           setHasKey(selected);
         } else {
-          // Se o objeto não existir, provavelmente estamos em um ambiente 
-          // onde a seleção manual é necessária
+          // Se não estiver no ambiente AI Studio, assume que precisa conectar
           setHasKey(false);
         }
       } catch (e) {
-        console.warn("Aguardando inicialização do ambiente AI Studio...");
         setHasKey(false);
       }
     };
     
-    // Pequeno delay para garantir que scripts externos de ambiente carreguem
-    const timer = setTimeout(checkKey, 500);
+    // Pequeno intervalo para o script do ambiente carregar
+    const timer = setTimeout(checkKeyStatus, 800);
     return () => clearTimeout(timer);
   }, []);
 
   const handleConnectKey = async () => {
     try {
-      if (typeof window.aistudio !== 'undefined') {
+      if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
         await window.aistudio.openSelectKey();
-        // Conforme as regras, assumimos sucesso após acionar o diálogo
+        // Conforme diretriz: assume sucesso após o trigger para evitar race conditions
         setHasKey(true);
-        showToast('Seletor aberto. Conecte sua chave para ativar o Zion Frame.', 'success');
+        showToast('Conexão iniciada! Selecione seu projeto no diálogo do Google.', 'success');
       } else {
-        showToast('O sistema de conexão não está disponível neste navegador.', 'error');
+        // Fallback: se o objeto não existe, o usuário pode estar fora do frame esperado
+        showToast('Ambiente de conexão não detectado. Use o Preview do AI Studio.', 'error');
+        console.error("window.aistudio is not defined");
       }
     } catch (e) {
-      console.error("Erro ao abrir seletor:", e);
-      showToast('Não foi possível abrir o seletor de chaves.', 'error');
+      showToast('Falha ao abrir o seletor de chaves.', 'error');
     }
   };
 
   const handleClearCanvas = useCallback(() => {
     setGeneratedImages([]);
-    showToast('Canvas limpo com sucesso.', 'success');
+    showToast('Grid limpo.', 'success');
   }, [showToast]);
 
   const handleGenerate = useCallback(async (promptOverride?: string) => {
     const activePrompt = promptOverride || prompt;
     if (!activePrompt.trim()) {
-      showToast('Por favor, digite um prompt.', 'error');
+      showToast('Digite um prompt para criar.', 'error');
       return;
     }
 
     setGenerationState('GENERATING');
-    const placeholders: GeneratedImage[] = Array.from({ length: settings.numImages }).map((_, index) => {
-      const startX = window.innerWidth / 2 - 160 + (Math.random() * 60 - 30);
-      const startY = window.innerHeight / 2 - 200 + (Math.random() * 60 - 30);
-      return {
-        id: crypto.randomUUID(),
-        src: '',
-        title: 'Gerando...',
-        prompt: activePrompt,
-        aspectRatio: settings.aspectRatio,
-        x: startX + (index * 40),
-        y: startY + (index * 40),
-        status: 'loading' as const,
-      };
-    });
+    const placeholders: GeneratedImage[] = Array.from({ length: settings.numImages }).map((_, index) => ({
+      id: crypto.randomUUID(),
+      src: '',
+      title: 'Criando...',
+      prompt: activePrompt,
+      aspectRatio: settings.aspectRatio,
+      x: window.innerWidth / 2 - 160 + (index * 40),
+      y: window.innerHeight / 2 - 200 + (index * 40),
+      status: 'loading' as const,
+    }));
     
     setGeneratedImages(prev => [...prev, ...placeholders]);
 
@@ -130,13 +124,11 @@ function App() {
       });
 
       setGenerationState('COMPLETE');
-      showToast(`Arte gerada com sucesso.`, 'success');
     } catch (error: any) {
-      let msg = error.message || 'Erro inesperado na geração.';
-      // Reset key selection if the request fails with "Requested entity was not found."
+      let msg = error.message || 'Erro na engine de geração.';
       if (msg.includes("Requested entity was not found")) {
-        msg = "Chave de API não encontrada ou inválida. Reconecte sua conta.";
-        setHasKey(false);
+        msg = "Chave inválida. Por favor, reconecte sua API Key.";
+        setHasKey(false); // Reseta para pedir nova chave
       }
       showToast(msg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
@@ -145,13 +137,10 @@ function App() {
     }
   }, [prompt, settings, showToast]);
 
-  // Enquanto verifica o estado inicial, mantém uma tela neutra
   if (hasKey === null) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-white/10 border-t-[#a3ff12] rounded-full animate-spin"></div>
-      </div>
-    );
+    return <div className="fixed inset-0 bg-black flex items-center justify-center">
+      <div className="w-10 h-10 border-2 border-white/10 border-t-primary rounded-full animate-spin"></div>
+    </div>;
   }
 
   if (!hasKey) {
@@ -166,11 +155,11 @@ function App() {
           </div>
 
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
-            Visão <br/><span className="text-[#a3ff12]">Zion Frame</span>
+            Potencialize sua <br/><span className="text-[#a3ff12]">Criatividade</span>
           </h1>
           
           <p className="text-neutral-400 text-sm mb-10 leading-relaxed font-medium">
-            O Zion Frame requer que você conecte sua própria chave do Google AI Studio. Isso garante que cada usuário use sua própria cota gratuita de forma independente.
+            O Zion Frame utiliza a infraestrutura do Google AI Studio. Conecte sua conta para usar sua própria cota gratuita de geração de imagens.
           </p>
 
           <button 
@@ -186,14 +175,14 @@ function App() {
               target="_blank" 
               className="text-[10px] text-[#a3ff12] uppercase font-bold tracking-widest hover:underline"
             >
-              Não tenho uma chave? Criar no AI Studio →
+              Não tem uma chave? Criar no Google Studio →
             </a>
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
               className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest hover:text-white transition-colors"
             >
-              Sobre cotas e faturamento do Google
+              Saiba mais sobre cotas gratuitas e faturamento
             </a>
           </div>
         </div>

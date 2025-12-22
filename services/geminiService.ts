@@ -8,25 +8,21 @@ export const generateImage = async (
     numImages: number,
     quality: Settings['quality']
 ): Promise<string[]> => {
-    // The API key must be obtained from process.env.API_KEY
+    // A chave é injetada automaticamente em process.env.API_KEY pelo sistema aistudio
     const apiKey = process.env.API_KEY;
 
     if (!apiKey) {
-        throw new Error("Você precisa conectar sua API Key antes de gerar imagens.");
+        throw new Error("API Key não encontrada. Por favor, reconecte sua conta.");
     }
 
     const modelName = quality === 'Standard' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
 
     const generateSingle = async (): Promise<string | null> => {
         try {
-            // Create a new GoogleGenAI instance right before making an API call to ensure it uses the up-to-date key
+            // Criamos a instância aqui para garantir que pegamos a chave mais recente
             const ai = new GoogleGenAI({ apiKey });
             
-            // Configure imageSize based on quality for gemini-3-pro-image-preview
-            let imageSize: "1K" | "2K" | "4K" | undefined = undefined;
-            if (modelName === 'gemini-3-pro-image-preview') {
-                imageSize = quality === '4K' ? '4K' : (quality === 'HD' ? '2K' : '1K');
-            }
+            const imageSize = quality === '4K' ? '4K' : (quality === 'HD' ? '2K' : '1K');
 
             const response = await ai.models.generateContent({
                 model: modelName,
@@ -36,58 +32,50 @@ export const generateImage = async (
                 config: {
                     imageConfig: {
                         aspectRatio: aspectRatio,
-                        ...(imageSize && { imageSize })
+                        ...(modelName === 'gemini-3-pro-image-preview' && { imageSize })
                     }
                 },
             });
 
-            // Iterate through all parts to find the image part as per guidelines
-            const candidates = response.candidates?.[0]?.content?.parts || [];
-            for (const part of candidates) {
+            // Itera pelas partes para encontrar a imagem (conforme diretrizes)
+            const parts = response.candidates?.[0]?.content?.parts || [];
+            for (const part of parts) {
                 if (part.inlineData) {
                     return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
                 }
             }
             return null;
         } catch (error: any) {
-            console.error(`Erro na geração (${modelName}):`, error);
-            
-            if (error.message?.includes("quota") || error.message?.includes("429")) {
-                throw new Error("Cota de uso excedida no Google AI Studio. Tente novamente em alguns minutos ou alterne para outro projeto.");
-            }
-            
+            console.error(`Erro na geração:`, error);
             throw error;
         }
     };
 
-    try {
-        const promises = Array.from({ length: numImages }).map(() => generateSingle());
-        const results = await Promise.all(promises);
-        const images = results.filter((img): img is string => img !== null);
+    const results = await Promise.all(
+        Array.from({ length: numImages }).map(() => generateSingle())
+    );
+    
+    const images = results.filter((img): img is string => img !== null);
 
-        if (images.length === 0) {
-            throw new Error("A IA não conseguiu processar este prompt. Tente algo mais descritivo.");
-        }
-
-        return images;
-    } catch (error: any) {
-        throw error;
+    if (images.length === 0) {
+        throw new Error("Não foi possível gerar imagens. Tente um prompt diferente.");
     }
+
+    return images;
 };
 
 export const generateTitle = async (prompt: string): Promise<string> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Obra Digital";
+    if (!apiKey) return "Arte Zion";
     
     try {
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview', 
-            contents: `Crie um título artístico muito curto (3 palavras) para: "${prompt}". Retorne apenas o título.`,
+            contents: `Responda com apenas 3 palavras: um título artístico para "${prompt}"`,
         });
-        // Access text property directly (not as a method)
-        return response.text?.trim() || "Obra Digital";
+        return response.text?.trim() || "Arte Zion";
     } catch (error) {
-        return "Obra Digital";
+        return "Arte Zion";
     }
 };
