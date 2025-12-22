@@ -8,15 +8,16 @@ export const generateImage = async (
     numImages: number,
     quality: Settings['quality']
 ): Promise<string[]> => {
-    // Model selection based on requested quality
+    // Verificação preventiva para evitar erro fatal do SDK no navegador
+    if (!process.env.API_KEY || process.env.API_KEY === "undefined") {
+      throw new Error("CHAVE_AUSENTE: A API_KEY não foi detectada no ambiente. Certifique-se de que a variável foi adicionada no Vercel e o deploy foi refeito.");
+    }
+
     const modelName = quality === 'Standard' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
 
     const generateSingle = async (): Promise<string | null> => {
         try {
-            // ALWAYS create a new GoogleGenAI instance right before making an API call to use the latest key
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            // imageSize is only supported for gemini-3-pro-image-preview
             const imageSize = quality === '4K' ? '4K' : (quality === 'HD' ? '2K' : '1K');
 
             const response = await ai.models.generateContent({
@@ -32,7 +33,6 @@ export const generateImage = async (
                 },
             });
 
-            // Iterate through all parts to find the image part as per guidelines
             const parts = response.candidates?.[0]?.content?.parts || [];
             for (const part of parts) {
                 if (part.inlineData) {
@@ -42,11 +42,14 @@ export const generateImage = async (
             return null;
         } catch (error: any) {
             console.error(`Engine Error:`, error);
+            // Captura erro específico de chave do SDK
+            if (error.message?.includes("API Key")) {
+                throw new Error("CHAVE_INVALIDA: A chave configurada no Vercel foi rejeitada pela API do Google.");
+            }
             throw error;
         }
     };
 
-    // Parallel generation requests
     const results = await Promise.all(
         Array.from({ length: numImages }).map(() => generateSingle())
     );
@@ -62,16 +65,15 @@ export const generateImage = async (
 
 export const generateTitle = async (prompt: string): Promise<string> => {
     try {
-        // ALWAYS create a new GoogleGenAI instance right before making an API call
+        if (!process.env.API_KEY || process.env.API_KEY === "undefined") return "Obra Zion";
+        
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview', 
             contents: `Crie um título artístico de 3 palavras para esta descrição: "${prompt}"`,
         });
-        // Correctly access text property (not a method)
         return response.text?.trim() || "Obra Zion";
     } catch (error) {
-        console.error("Title Generation Error:", error);
         return "Obra Zion";
     }
 };

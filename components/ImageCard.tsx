@@ -59,10 +59,13 @@ export const ImageCard: React.FC<ImageCardProps> = memo(({ image, onZoomClick, o
 
             <div className={`${aspectRatioMap[aspectRatio]} w-full overflow-hidden relative bg-black/40`}>
                 {isLoading ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#a3ff12]/5 via-transparent to-[#a3ff12]/5 animate-pulse flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-3">
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#a3ff12]/5 via-transparent to-[#a3ff12]/5 animate-pulse"></div>
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                        <div className="w-full h-1 bg-primary/20 absolute top-0 animate-scan"></div>
+                        <div className="flex flex-col items-center gap-3 relative z-10">
                              <div className="w-8 h-8 border-2 border-[#a3ff12]/10 border-t-[#a3ff12] rounded-full animate-spin"></div>
-                             <span className="text-[8px] font-black tracking-[0.3em] text-[#a3ff12]/80 uppercase">Manifestando</span>
+                             <span className="text-[8px] font-black tracking-[0.3em] text-[#a3ff12] uppercase animate-pulse">Neural Mapping</span>
                         </div>
                     </div>
                 ) : (

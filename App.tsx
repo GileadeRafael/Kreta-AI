@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Generator } from './components/Generator';
 import { Toast } from './components/ui/Toast';
@@ -30,11 +30,14 @@ function App() {
   
   const [generationState, setGenerationState] = useState<GenerationState>('IDLE');
   const [toast, setToast] = useState<ToastInfo | null>(null);
-  const [isEngineReady, setIsEngineReady] = useState<boolean>(!!process.env.API_KEY);
+  
+  // Assumimos que está pronto se estiver no Vercel. 
+  // O erro real será capturado na tentativa de geração.
+  const [isEngineReady, setIsEngineReady] = useState<boolean>(true);
 
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
+    setTimeout(() => setToast(null), 6000);
   }, []);
 
   const handleSyncEngine = async () => {
@@ -42,12 +45,12 @@ function App() {
       try {
         await window.aistudio.openSelectKey();
         setIsEngineReady(true);
-        showToast('Engine Zion Sincronizada.', 'success');
+        showToast('Engine Zion Sincronizada via AI Studio.', 'success');
       } catch (e) {
         showToast('Erro ao sincronizar engine.', 'error');
       }
     } else {
-      showToast('Certifique-se de que a API_KEY está configurada no seu painel Vercel.', 'error');
+      showToast('No Vercel, use a aba "Environment Variables" e adicione API_KEY.', 'error');
     }
   };
 
@@ -100,14 +103,21 @@ function App() {
       setGenerationState('COMPLETE');
       setIsEngineReady(true);
     } catch (error: any) {
-      let msg = error.message || 'Erro na transmissão Zion.';
+      const errorMsg = error.message || '';
+      let displayMsg = 'Erro na transmissão Zion.';
       
-      if (msg.includes("API Key") || msg.includes("401") || msg.includes("not found")) {
-        msg = "Engine Desconectada. Clique em 'Sincronizar Zion' no topo.";
+      if (errorMsg.includes("CHAVE_AUSENTE")) {
+        displayMsg = "API_KEY não encontrada. No Vercel, certifique-se de que a variável se chama exatamente API_KEY.";
+        setIsEngineReady(false);
+      } else if (errorMsg.includes("CHAVE_INVALIDA")) {
+        displayMsg = "A API_KEY no Vercel é inválida ou expirou.";
+        setIsEngineReady(false);
+      } else if (errorMsg.includes("401") || errorMsg.includes("API Key")) {
+        displayMsg = "Acesso negado pela engine. Verifique sua chave no Vercel.";
         setIsEngineReady(false);
       }
       
-      showToast(msg, 'error');
+      showToast(displayMsg, 'error');
       const placeholderIds = placeholders.map(p => p.id);
       setGeneratedImages(prev => prev.filter(img => !placeholderIds.includes(img.id)));
       setGenerationState('ERROR');
